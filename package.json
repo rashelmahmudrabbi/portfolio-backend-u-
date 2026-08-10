@@ -1,0 +1,19 @@
+{
+  "name": "portfolio-backend",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Portfolio content API (Node/Express) + admin panel, deployed as Vercel serverless functions with Neon Postgres.",
+  "main": "api/index.js",
+  "scripts": {
+    "dev": "node scripts/dev-server.js",
+    "migrate": "node scripts/migrate.js",
+    "seed": "node scripts/seed.js"
+  },
+  "dependencies": {
+    "@neondatabase/serverless": "^0.10.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "pg": "^8.23.0"
+  }
+}
