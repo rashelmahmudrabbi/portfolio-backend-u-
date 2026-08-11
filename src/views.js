@@ -114,8 +114,8 @@ const STYLE = `
   .grid-links { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
   .grid-links a { 
     display: flex; flex-direction: column; justify-content: center;
-    background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px;
-    padding: 24px; text-decoration: none; color: var(--text-main); font-weight: 600; font-size: 16px;
+    background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px;
+    padding: 20px 24px; text-decoration: none; color: var(--text-main); font-weight: 600; font-size: 16px;
     transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     box-shadow: 0 1px 3px rgba(0,0,0,0.02);
   }
@@ -169,6 +169,7 @@ function layout({ title, authed, body, flash }) {
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>${esc(title)} · Portfolio Admin</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 <style>${STYLE}</style>
 </head>
 <body>

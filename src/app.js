@@ -354,21 +354,94 @@ function buildApp() {
     auth.requireAdmin(req, res, next);
   });
 
-  app.get('/admin', (req, res) => {
-    const links = ADMIN_RESOURCE_KEYS.map((key) => {
-      const r = RESOURCES[key];
-      return `<a href="/admin/${esc(key)}">${esc(r.label)}<span>Manage ${esc(r.label.toLowerCase())}</span></a>`;
-    }).join('');
-    res.send(layout({
-      title: 'Dashboard', authed: true,
-      body: `<h1>Dashboard</h1>
-        <p class="muted">Edits here appear on the live site immediately — no redeploy needed.</p>
-        <div class="grid-links" style="margin-top:20px;">
-          <a href="/admin/settings">Site Settings<span>Profile, socials, skills, personal info</span></a>
-          <a href="/admin/gallery">Gallery<span>Events + photos</span></a>
-          ${links}
-        </div>`,
-    }));
+  const DASHBOARD_GROUPS = [
+    {
+      title: 'Core Info',
+      items: [
+        { key: 'settings', label: 'Site Settings', desc: 'Profile, socials, skills, personal info', icon: 'bi-gear-fill', color: '#6366f1', table: null },
+        { key: 'spoken-languages', label: 'Spoken Languages', desc: 'Manage spoken languages', icon: 'bi-translate', color: '#8b5cf6', table: 'spoken_languages' }
+      ]
+    },
+    {
+      title: 'Academic & Career',
+      items: [
+        { key: 'education', label: 'Education', desc: 'Manage education', icon: 'bi-mortarboard-fill', color: '#ec4899', table: 'education' },
+        { key: 'experience', label: 'Experience', desc: 'Manage experience', icon: 'bi-briefcase-fill', color: '#f43f5e', table: 'experience' },
+        { key: 'publications', label: 'Publications', desc: 'Manage publications', icon: 'bi-journal-text', color: '#f97316', table: 'publications' },
+        { key: 'research-interests', label: 'Research Interests', desc: 'Manage research interests', icon: 'bi-lightbulb-fill', color: '#eab308', table: 'research_interests' },
+        { key: 'references', label: 'References', desc: 'Manage references', icon: 'bi-person-lines-fill', color: '#84cc16', table: 'reference_list' }
+      ]
+    },
+    {
+      title: 'Portfolio & Media',
+      items: [
+        { key: 'projects', label: 'Projects', desc: 'Manage projects', icon: 'bi-kanban', color: '#10b981', table: 'projects' },
+        { key: 'gallery', label: 'Gallery Events', desc: 'Events + photos', icon: 'bi-images', color: '#14b8a6', table: 'gallery_events' },
+        { key: 'blog', label: 'Blog Posts', desc: 'Manage blog posts', icon: 'bi-pencil-square', color: '#06b6d4', table: 'blog' }
+      ]
+    },
+    {
+      title: 'Achievements',
+      items: [
+        { key: 'awards', label: 'Awards', desc: 'Manage awards', icon: 'bi-trophy-fill', color: '#0ea5e9', table: 'awards' },
+        { key: 'certifications', label: 'Certifications', desc: 'Manage certifications', icon: 'bi-patch-check-fill', color: '#3b82f6', table: 'certifications' },
+        { key: 'activities', label: 'Activities', desc: 'Manage activities', icon: 'bi-activity', color: '#6366f1', table: 'activities' }
+      ]
+    },
+    {
+      title: 'Teaching',
+      items: [
+        { key: 'teaching-roles', label: 'Teaching Roles', desc: 'Manage teaching roles', icon: 'bi-person-badge', color: '#8b5cf6', table: 'teaching_roles' },
+        { key: 'teaching-areas', label: 'Teaching Areas', desc: 'Manage teaching areas', icon: 'bi-book-half', color: '#d946ef', table: 'teaching_areas' },
+        { key: 'courses', label: 'Teaching Courses', desc: 'Manage teaching courses', icon: 'bi-journal-bookmark-fill', color: '#ec4899', table: 'courses' }
+      ]
+    }
+  ];
+
+  app.get('/admin', async (req, res, next) => {
+    try {
+      const sql = getSql();
+      const counts = {};
+      
+      await Promise.all(
+        DASHBOARD_GROUPS.flatMap(g => g.items).map(async (item) => {
+          if (item.table) {
+            const result = await sql(`SELECT count(*) as count FROM ${item.table}`);
+            counts[item.key] = result[0].count;
+          }
+        })
+      );
+
+      let groupsHtml = '';
+      for (const group of DASHBOARD_GROUPS) {
+        groupsHtml += `<h2 style="margin-top:48px; margin-bottom:20px; font-size:22px; color:var(--text-main); font-weight:700; letter-spacing:-0.03em;">${group.title}</h2><div class="grid-links">`;
+        for (const item of group.items) {
+          const countLabel = item.table ? `<div style="margin-top:12px;"><span style="font-size:12px; font-weight:600; color:${item.color}; background:${item.color}15; padding:4px 10px; border-radius:20px;">${counts[item.key]} items</span></div>` : '';
+          groupsHtml += `
+            <a href="/admin/${item.key}">
+              <div style="display:flex; align-items:center; gap:12px; margin-bottom:6px;">
+                <div style="width:36px; height:36px; border-radius:8px; background:${item.color}15; display:flex; align-items:center; justify-content:center;">
+                  <i class="bi ${item.icon}" style="color:${item.color}; font-size:18px;"></i>
+                </div>
+                <div style="font-weight:600; color:var(--text-main); font-size:16px;">${item.label}</div>
+              </div>
+              <span style="display:block; font-weight:400; color:var(--text-muted); font-size:14px;">${item.desc}</span>
+              ${countLabel}
+            </a>`;
+        }
+        groupsHtml += `</div>`;
+      }
+      
+      res.send(layout({
+        title: 'Dashboard', authed: true,
+        body: `<div style="margin-top:32px; margin-bottom:16px;">
+            <h1 style="font-size:36px; font-weight:800; letter-spacing:-0.04em;">Dashboard</h1>
+            <p class="muted" style="font-size:16px;">Edits here appear on the live site immediately — no redeploy needed.</p>
+          </div>
+          ${groupsHtml}
+          <div style="height:64px;"></div>`,
+      }));
+    } catch (err) { next(err); }
   });
 
   // Generic CRUD for every "simple list" resource.
