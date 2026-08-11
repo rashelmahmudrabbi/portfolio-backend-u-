@@ -33,14 +33,25 @@ function verify(signed) {
   return value;
 }
 
-function checkCredentials(username, password) {
-  const expectedUser = process.env.ADMIN_USERNAME || '';
-  const expectedPass = process.env.ADMIN_PASSWORD || '';
-  if (!expectedUser || !expectedPass) return false;
+function hashPassword(password) {
+  const salt = crypto.randomBytes(16).toString('hex');
+  const hash = crypto.scryptSync(password, salt, 64).toString('hex');
+  return `${salt}:${hash}`;
+}
 
-  const userOk = safeStringEqual(username || '', expectedUser);
-  const passOk = safeStringEqual(password || '', expectedPass);
-  return userOk && passOk;
+function verifyPassword(password, storedHash) {
+  if (!storedHash || !storedHash.includes(':')) return false;
+  const [salt, key] = storedHash.split(':');
+  const keyBuffer = Buffer.from(key, 'hex');
+  const derivedKey = crypto.scryptSync(password, salt, 64);
+  return crypto.timingSafeEqual(keyBuffer, derivedKey);
+}
+
+async function checkCredentials(sql, username, password) {
+  if (!username || !password) return false;
+  const rows = await sql`SELECT * FROM admin_users WHERE username = ${username} LIMIT 1`;
+  if (rows.length === 0) return false;
+  return verifyPassword(password, rows[0].password_hash);
 }
 
 function safeStringEqual(a, b) {
@@ -93,6 +104,8 @@ function requireAdmin(req, res, next) {
 
 module.exports = {
   COOKIE_NAME,
+  hashPassword,
+  verifyPassword,
   checkCredentials,
   createSessionCookie,
   clearSessionCookie,

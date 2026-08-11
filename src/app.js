@@ -335,9 +335,20 @@ function buildApp() {
     }));
   });
 
-  app.post('/admin/login', (req, res) => {
+  app.post('/admin/login', async (req, res) => {
     const { username, password } = req.body;
-    if (auth.checkCredentials(username, password)) {
+    const sql = getSql();
+    
+    // Seed admin_users table if empty
+    const adminCount = await sql`SELECT count(*) FROM admin_users`;
+    if (adminCount[0].count === '0') {
+      const expectedUser = process.env.ADMIN_USERNAME || 'admin';
+      const expectedPass = process.env.ADMIN_PASSWORD || 'password';
+      const hash = auth.hashPassword(expectedPass);
+      await sql`INSERT INTO admin_users (id, username, password_hash) VALUES (1, ${expectedUser}, ${hash})`;
+    }
+
+    if (await auth.checkCredentials(sql, username, password)) {
       res.setHeader('Set-Cookie', auth.createSessionCookie());
       return res.redirect('/admin');
     }
@@ -352,6 +363,43 @@ function buildApp() {
   app.use('/admin', (req, res, next) => {
     if (req.path === '/login') return next();
     auth.requireAdmin(req, res, next);
+  });
+
+  app.get('/admin/change-password', (req, res) => {
+    res.send(layout({
+      title: 'Change Password', authed: true,
+      body: `<div class="card" style="max-width:400px; margin: 40px auto;">
+        <h2>Change Password</h2>
+        <form method="post" action="/admin/change-password">
+          <label>Current Password</label>
+          <input type="password" name="oldPassword" required />
+          <label>New Password</label>
+          <input type="password" name="newPassword" required />
+          <label>Confirm New Password</label>
+          <input type="password" name="confirmPassword" required />
+          <div class="actions">
+            <a href="/admin" class="btn secondary">Cancel</a>
+            <button class="btn" type="submit">Save</button>
+          </div>
+        </form>
+      </div>`,
+      flash: req.query.error ? 'Password change failed. Check your current password and ensure new passwords match.' : (req.query.success ? 'Password successfully changed.' : null)
+    }));
+  });
+
+  app.post('/admin/change-password', async (req, res) => {
+    const { oldPassword, newPassword, confirmPassword } = req.body;
+    if (newPassword !== confirmPassword) {
+      return res.redirect('/admin/change-password?error=1');
+    }
+    const sql = getSql();
+    const rows = await sql`SELECT * FROM admin_users LIMIT 1`;
+    if (rows.length === 0 || !auth.verifyPassword(oldPassword, rows[0].password_hash)) {
+      return res.redirect('/admin/change-password?error=1');
+    }
+    const newHash = auth.hashPassword(newPassword);
+    await sql`UPDATE admin_users SET password_hash = ${newHash} WHERE id = ${rows[0].id}`;
+    res.redirect('/admin/change-password?success=1');
   });
 
   const DASHBOARD_GROUPS = [

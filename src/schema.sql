@@ -2,6 +2,12 @@
 -- Run via `npm run migrate` (see scripts/migrate.js). Safe to re-run —
 -- every statement is guarded with IF NOT EXISTS.
 
+CREATE TABLE IF NOT EXISTS admin_users (
+  id INTEGER PRIMARY KEY DEFAULT 1 CHECK (id = 1),
+  username TEXT NOT NULL,
+  password_hash TEXT NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS site_settings (
   id INTEGER PRIMARY KEY DEFAULT 1 CHECK (id = 1),
   name TEXT DEFAULT '',
