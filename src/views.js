@@ -175,7 +175,7 @@ function layout({ title, authed, body, flash }) {
 <body>
 <header class="topbar">
   <a href="/admin">Portfolio Admin</a>
-  ${authed ? `<nav><a href="/admin">Dashboard</a><a href="/admin/settings">Settings</a><a href="/admin/gallery">Gallery</a><a href="/admin/cv">Manage CV</a><a href="/admin/change-password">Change Password</a><a href="https://rashelmahmudrabbi.github.io/portfolio-frontend/" target="_blank" style="color:#e8b84b;">↗ Preview Site</a><form class="inline" method="post" action="/admin/logout"><button class="btn secondary" style="margin-left:16px;">Log out</button></form></nav>` : ''}
+  ${authed ? `<nav><a href="/admin">Dashboard</a><a href="/admin/settings">Settings</a><a href="/admin/gallery">Gallery</a><a href="/admin/cv">Manage CV</a><a href="/admin/change-password">Change Password</a><a href="https://rashelmahmudrabbi.github.io/" target="_blank" style="color:#e8b84b;">↗ Preview Site</a><form class="inline" method="post" action="/admin/logout"><button class="btn secondary" style="margin-left:16px;">Log out</button></form></nav>` : ''}
 </header>
 <main>
   ${flash ? `<div class="flash">${esc(flash)}</div>` : ''}

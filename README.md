@@ -134,9 +134,9 @@ changes made in `/admin` appear on the live site immediately.
    `/admin`, not through redeploys.
 5. Push to `main` (or run `vercel --prod`) — Vercel redeploys automatically
    on every push once the project is linked to the GitHub repo.
-6. Confirm `https://<your-project>.vercel.app/api/health` returns
+6. Confirm `https://portfolio-backend-u.vercel.app/api/health` returns
    `{"ok":true}`, then update the frontend's `assets/js/config.js`
-   `API_BASE` to `https://<your-project>.vercel.app/api`.
+   `API_BASE` to `https://portfolio-backend-u.vercel.app/api`.
 
 ### Why Vercel instead of Render for this backend
 
