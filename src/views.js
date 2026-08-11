@@ -60,7 +60,7 @@ const STYLE = `
   }
   header.topbar nav a:hover { color: var(--text-main); }
   
-  main { max-width: 1040px; margin: 48px auto; padding: 0 24px; animation: fadeIn 0.3s ease-out; }
+  main { max-width: 1040px; margin: 48px auto; padding: 0 24px; animation: slideUpFade 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
   
   h1 { font-size: 32px; margin-bottom: 12px; font-weight: 700; letter-spacing: -0.04em; }
   h2 { font-size: 20px; margin-bottom: 24px; font-weight: 600; letter-spacing: -0.02em; }
@@ -73,14 +73,19 @@ const STYLE = `
     padding: 32px; 
     margin-bottom: 32px; 
     box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    transition: box-shadow 0.2s ease, transform 0.2s ease;
+  }
+  .card:hover {
+    box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+    transform: translateY(-2px);
   }
   
   /* Tables */
   table { width: 100%; border-collapse: separate; border-spacing: 0; }
   th, td { text-align: left; padding: 16px 12px; border-bottom: 1px solid var(--border); font-size: 14px; vertical-align: middle; }
   th { color: var(--text-muted); font-weight: 500; font-size: 13px; text-transform: capitalize; border-bottom-width: 2px; }
-  tbody tr { transition: background 0.15s; }
-  tbody tr:hover { background: #f9fafb; }
+  tbody tr { transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1); }
+  tbody tr:hover { background: #fdfdfd; transform: translateX(4px); box-shadow: -4px 0 0 var(--text-main); }
   
   /* Buttons */
   a.btn, button.btn { 
@@ -88,15 +93,16 @@ const STYLE = `
     background: var(--primary); color: #fff; border: 1px solid var(--primary);
     padding: 8px 16px; border-radius: 6px; text-decoration: none; 
     font-size: 14px; font-weight: 500; cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   }
-  a.btn:hover, button.btn:hover { background: var(--primary-hover); border-color: var(--primary-hover); }
+  a.btn:hover, button.btn:hover { background: var(--primary-hover); border-color: var(--primary-hover); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+  a.btn:active, button.btn:active { transform: scale(0.97); }
   
   a.btn.secondary, button.btn.secondary { background: #fff; color: var(--text-main); border: 1px solid var(--border); }
-  a.btn.secondary:hover, button.btn.secondary:hover { background: #f5f5f5; border-color: #d4d4d4; }
+  a.btn.secondary:hover, button.btn.secondary:hover { background: #f9fafb; border-color: var(--text-main); color: var(--text-main); }
   
   a.btn.danger, button.btn.danger { background: #fff; color: var(--danger); border: 1px solid var(--border); }
-  a.btn.danger:hover, button.btn.danger:hover { background: #fff0f0; border-color: var(--danger); color: var(--danger-hover); }
+  a.btn.danger:hover, button.btn.danger:hover { background: var(--danger); border-color: var(--danger); color: #fff; box-shadow: 0 4px 12px rgba(238,0,0,0.2); }
   
   /* Links */
   a.link { color: #0070f3; text-decoration: none; font-size: 14px; margin-right: 16px; font-weight: 500; transition: color 0.2s; }
@@ -110,12 +116,13 @@ const STYLE = `
     display: flex; flex-direction: column; justify-content: center;
     background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px;
     padding: 24px; text-decoration: none; color: var(--text-main); font-weight: 600; font-size: 16px;
-    transition: all 0.2s ease;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     box-shadow: 0 1px 3px rgba(0,0,0,0.02);
   }
   .grid-links a:hover { 
-    border-color: #999; 
-    box-shadow: 0 4px 12px rgba(0,0,0,0.08); 
+    border-color: var(--text-main); 
+    box-shadow: 0 8px 24px rgba(0,0,0,0.08); 
+    transform: translateY(-4px);
   }
   .grid-links a span { display: block; font-weight: 400; color: var(--text-muted); font-size: 14px; margin-top: 8px; }
   
@@ -145,8 +152,14 @@ const STYLE = `
   .muted { color: var(--text-muted); font-size: 14px; }
   form.inline { display: inline; }
   
-  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-  @keyframes slideDown { from { transform: translateY(-10px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+  @keyframes slideUpFade { 
+    from { opacity: 0; transform: translateY(20px); } 
+    to { opacity: 1; transform: translateY(0); } 
+  }
+  @keyframes slideDown { 
+    from { transform: translateY(-10px); opacity: 0; } 
+    to { transform: translateY(0); opacity: 1; } 
+  }
 `;
 
 function layout({ title, authed, body, flash }) {
