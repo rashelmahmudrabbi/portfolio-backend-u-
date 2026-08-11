@@ -7,7 +7,8 @@
   "scripts": {
     "dev": "node scripts/dev-server.js",
     "migrate": "node scripts/migrate.js",
-    "seed": "node scripts/seed.js"
+    "seed": "node scripts/seed.js",
+    "extract": "node scripts/extract_data.js"
   },
   "dependencies": {
     "@neondatabase/serverless": "^0.10.0",
