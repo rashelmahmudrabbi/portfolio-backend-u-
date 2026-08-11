@@ -29,6 +29,14 @@ function buildApp() {
   app.disable('x-powered-by');
   app.use(express.urlencoded({ extended: false }));
 
+  // ── Security headers ─────────────────────────────────────────────────
+  app.use((req, res, next) => {
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.setHeader('X-Frame-Options', 'DENY');
+    res.setHeader('X-XSS-Protection', '1; mode=block');
+    next();
+  });
+
   const allowedOrigins = (process.env.CORS_ALLOWED_ORIGINS || '')
     .split(',')
     .map((s) => s.trim())
@@ -38,13 +46,43 @@ function buildApp() {
   app.use('/api', cors({
     origin(origin, callback) {
       if (!origin || allowedOrigins.includes(origin)) return callback(null, true);
-      // Signal a disallowed origin without throwing — browsers only ever
-      // care about the (absent) Access-Control-Allow-Origin header, and
-      // this keeps a bad Origin from turning into a 500 in the generic
-      // error handler below.
       callback(null, false);
     },
   }));
+
+  // ── Simple in-memory rate limiter for /api/* ──────────────────────────
+  const rateLimitMap = new Map();
+  const RATE_LIMIT_WINDOW_MS = 60 * 1000; // 1 minute
+  const RATE_LIMIT_MAX = 120; // max requests per window per IP
+  app.use('/api', (req, res, next) => {
+    const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown';
+    const now = Date.now();
+    let entry = rateLimitMap.get(ip);
+    if (!entry || now - entry.start > RATE_LIMIT_WINDOW_MS) {
+      entry = { start: now, count: 0 };
+      rateLimitMap.set(ip, entry);
+    }
+    entry.count++;
+    if (entry.count > RATE_LIMIT_MAX) {
+      return res.status(429).json({ detail: 'Too many requests. Please try again later.' });
+    }
+    next();
+  });
+  // Clean up stale entries every 5 minutes
+  setInterval(() => {
+    const cutoff = Date.now() - RATE_LIMIT_WINDOW_MS;
+    for (const [ip, entry] of rateLimitMap) {
+      if (entry.start < cutoff) rateLimitMap.delete(ip);
+    }
+  }, 5 * 60 * 1000).unref();
+
+  // ── Cache-Control for all GET /api/* responses ───────────────────────
+  app.use('/api', (req, res, next) => {
+    if (req.method === 'GET') {
+      res.setHeader('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=60');
+    }
+    next();
+  });
 
   // ─────────────────────────────────────────────────────────────────────
   // Public, read-only API — same paths and JSON shapes the frontend
@@ -60,6 +98,96 @@ function buildApp() {
   });
 
   app.get('/api/health', (req, res) => res.json({ ok: true }));
+
+  // ── Combined /api/portfolio endpoint ──────────────────────────────────
+  // Returns ALL homepage data in a single response, cutting round-trips
+  // from 10+ to 1 and making the page load significantly faster.
+  app.get('/api/portfolio', async (req, res, next) => {
+    try {
+      const sql = getSql();
+
+      // Fire all queries in parallel
+      const [settingsRow, interests, langs, roles, areas,
+             eduRows, expRows, pubRows, projRows, certRows,
+             awardRows, actRows, galleryEvents, galleryPhotos, refRows] = await Promise.all([
+        sql`SELECT * FROM site_settings WHERE id = 1`,
+        sql`SELECT * FROM research_interests ORDER BY sort_order ASC, id ASC`,
+        sql`SELECT * FROM spoken_languages ORDER BY sort_order ASC, id ASC`,
+        sql`SELECT * FROM teaching_roles ORDER BY sort_order ASC, id ASC`,
+        sql`SELECT * FROM teaching_areas ORDER BY sort_order ASC, id ASC`,
+        sql`SELECT * FROM education ORDER BY sort_order ASC, id ASC`,
+        sql`SELECT * FROM experience ORDER BY sort_order ASC, id ASC`,
+        sql`SELECT * FROM publications ORDER BY sort_order ASC, id ASC`,
+        sql`SELECT * FROM projects ORDER BY sort_order ASC, id ASC`,
+        sql`SELECT * FROM certifications ORDER BY sort_order ASC, id ASC`,
+        sql`SELECT * FROM awards ORDER BY sort_order ASC, id ASC`,
+        sql`SELECT * FROM activities ORDER BY sort_order ASC, id ASC`,
+        sql`SELECT * FROM gallery_events ORDER BY sort_order ASC, id ASC`,
+        sql`SELECT * FROM gallery_photos ORDER BY sort_order ASC, id ASC`,
+        sql`SELECT * FROM reference_list ORDER BY sort_order ASC, id ASC`,
+      ]);
+
+      const s = settingsRow[0] || {};
+
+      // Build gallery with nested photos
+      const byEvent = {};
+      for (const p of galleryPhotos) {
+        (byEvent[p.event_id] = byEvent[p.event_id] || []).push({ src: p.src, caption: p.caption });
+      }
+
+      res.json({
+        settings: {
+          profile: {
+            name: s.name || '', title: s.title || '', email: s.email || '',
+            phone: s.phone || '', location: s.location || '', avatar: s.avatar || '',
+            objective: s.objective || '',
+            stats: {
+              publications: s.stat_publications || 0, projects: s.stat_projects || 0,
+              awards: s.stat_awards || 0, certifications: s.stat_certifications || 0,
+            },
+            socials: {
+              github: s.social_github || '', linkedin: s.social_linkedin || '',
+              researchgate: s.social_researchgate || '', scholar: s.social_scholar || '',
+              orcid: s.social_orcid || '',
+            },
+          },
+          researchInterests: interests.map((r) => ({ icon: r.icon, topic: r.topic, desc: r.description })),
+          skills: {
+            languages: splitCommas(s.skills_languages), frameworks: splitCommas(s.skills_frameworks),
+            tools: splitCommas(s.skills_tools), researchMethods: splitCommas(s.skills_research_methods),
+          },
+          spokenLanguages: langs.map((l) => ({ name: l.name, level: l.level })),
+          personalInfo: {
+            fatherName: s.father_name || '', motherName: s.mother_name || '',
+            dob: s.dob || '', religion: s.religion || '', nid: s.nid || '',
+            maritalStatus: s.marital_status || '', bloodGroup: s.blood_group || '',
+            nationality: s.nationality || '', address: s.address || '',
+          },
+          teaching: {
+            philosophy: s.teaching_philosophy || '',
+            roles: roles.map((r) => ({ title: r.title, desc: r.description })),
+            areas: areas.map((a) => ({ topic: a.topic, desc: a.description })),
+            mentoringText: s.teaching_mentoring_text || '',
+          },
+          footerText: s.footer_text || '',
+          cvLastUpdated: s.cv_last_updated || '',
+          cvDownloadUrl: s.cv_download_url || '',
+        },
+        education: eduRows.map((r) => serializeRow('education', r)),
+        experience: expRows.map((r) => serializeRow('experience', r)),
+        publications: pubRows.map((r) => serializeRow('publications', r)),
+        projects: projRows.map((r) => serializeRow('projects', r)),
+        certifications: certRows.map((r) => serializeRow('certifications', r)),
+        awards: awardRows.map((r) => serializeRow('awards', r)),
+        activities: actRows.map((r) => serializeRow('activities', r)),
+        gallery: galleryEvents.map((e) => ({
+          id: e.id, title: e.title, year: e.year, order: e.sort_order,
+          photos: byEvent[e.id] || [],
+        })),
+        references: refRows.map((r) => serializeRow('references', r)),
+      });
+    } catch (err) { next(err); }
+  });
 
   app.get('/api/settings', async (req, res, next) => {
     try {

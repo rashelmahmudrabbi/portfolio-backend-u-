@@ -56,7 +56,7 @@ function layout({ title, authed, body, flash }) {
 <body>
 <header class="topbar">
   <a href="/admin">Portfolio Admin</a>
-  ${authed ? `<nav><a href="/admin">Dashboard</a><a href="/admin/settings">Settings</a><a href="/admin/gallery">Gallery</a><form class="inline" method="post" action="/admin/logout"><button class="btn secondary" style="margin-left:16px;">Log out</button></form></nav>` : ''}
+  ${authed ? `<nav><a href="/admin">Dashboard</a><a href="/admin/settings">Settings</a><a href="/admin/gallery">Gallery</a><a href="https://rashelmahmudrabbi.github.io/portfolio-frontend/" target="_blank" style="color:#e8b84b;">↗ Preview Site</a><form class="inline" method="post" action="/admin/logout"><button class="btn secondary" style="margin-left:16px;">Log out</button></form></nav>` : ''}
 </header>
 <main>
   ${flash ? `<div class="flash">${esc(flash)}</div>` : ''}
@@ -131,7 +131,10 @@ function renderTable({ resourceKey, label, fields, rows, extraCol }) {
   return `<div class="card">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 14px;">
       <h2 style="margin:0;">${esc(label)}</h2>
-      <a class="btn" href="/admin/${esc(resourceKey)}/new">+ Add</a>
+      <div style="display:flex; gap:8px; align-items:center;">
+        <a class="link" href="/api/${esc(resourceKey)}" target="_blank" style="font-size:12px;">View as JSON</a>
+        <a class="btn" href="/admin/${esc(resourceKey)}/new">+ Add</a>
+      </div>
     </div>
     <table>
       <thead><tr>${head}<th>Order</th><th></th></tr></thead>
