@@ -600,11 +600,18 @@ function buildApp() {
     } catch (err) { next(err); }
   });
 
+  const NEW_GALLERY_EVENT_FIELDS = [
+    { key: 'title', label: 'Title', type: 'text' },
+    { key: 'year', label: 'Year', type: 'text' },
+    { key: 'photo_src', label: 'Initial Photo URL/Path (Optional)', type: 'text' },
+    { key: 'photo_caption', label: 'Initial Photo Caption (Optional)', type: 'text' },
+  ];
+
   app.get('/admin/gallery/new', (req, res) => {
     res.send(layout({
       title: 'New Gallery Event', authed: true,
       body: `<h1>New Gallery Event</h1><div class="card">${renderForm({
-        fields: GALLERY_EVENT_FIELDS, action: '/admin/gallery/new', submitLabel: 'Create',
+        fields: NEW_GALLERY_EVENT_FIELDS, action: '/admin/gallery/new', submitLabel: 'Create',
       })}</div>`,
     }));
   });
@@ -613,10 +620,20 @@ function buildApp() {
     try {
       const sql = getSql();
       const order = Number(req.body.order) || 0;
-      await sql(
-        `INSERT INTO gallery_events (sort_order, title, year) VALUES ($1, $2, $3)`,
+      const rows = await sql(
+        `INSERT INTO gallery_events (sort_order, title, year) VALUES ($1, $2, $3) RETURNING id`,
         [order, req.body.title || '', req.body.year || '']
       );
+      
+      const eventId = rows[0].id;
+      
+      if (req.body.photo_src && req.body.photo_src.trim() !== '') {
+        await sql(
+          `INSERT INTO gallery_photos (event_id, sort_order, src, caption) VALUES ($1, 0, $2, $3)`,
+          [eventId, req.body.photo_src, req.body.photo_caption || '']
+        );
+      }
+      
       res.redirect('/admin/gallery');
     } catch (err) { next(err); }
   });
