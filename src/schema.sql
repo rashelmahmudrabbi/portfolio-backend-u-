@@ -46,6 +46,12 @@ CREATE TABLE IF NOT EXISTS site_settings (
   cv_download_url TEXT DEFAULT ''
 );
 
+CREATE TABLE IF NOT EXISTS cv_files (
+  id INTEGER PRIMARY KEY DEFAULT 1 CHECK (id = 1),
+  file_data TEXT,
+  mimetype TEXT,
+  filename TEXT
+);
 CREATE TABLE IF NOT EXISTS research_interests (
   id SERIAL PRIMARY KEY,
   sort_order INTEGER DEFAULT 0,

@@ -6,7 +6,7 @@ const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 *
 const { getSql } = require('./db');
 const { RESOURCES, serializeRow, splitCommas, splitLines } = require('./resources');
 const auth = require('./auth');
-const { layout, renderForm, renderTable, esc } = require('./views');
+const { layout, renderForm, renderTable, esc, renderCvAdmin } = require('./views');
 
 // Resources that get a generic, auto-generated admin CRUD screen. Gallery
 // events also live here (title/year only) — their nested photos get their
@@ -101,6 +101,32 @@ function buildApp() {
 
   app.get('/api/health', (req, res) => res.json({ ok: true }));
 
+  app.get('/api/cv/download', async (req, res, next) => {
+    try {
+      const sql = getSql();
+      const [cvFile] = await sql(`SELECT file_data, mimetype, filename FROM cv_files WHERE id = 1`);
+      
+      if (cvFile && cvFile.file_data) {
+        const buffer = Buffer.from(cvFile.file_data, 'base64');
+        res.setHeader('Content-Type', cvFile.mimetype || 'application/pdf');
+        res.setHeader('Content-Disposition', `attachment; filename="${cvFile.filename || 'cv.pdf'}"`);
+        res.send(buffer);
+      } else {
+        // Fallback to legacy Google Drive link or return 404
+        const [settings] = await sql(`SELECT cv_download_url FROM site_settings WHERE id = 1`);
+        if (settings && settings.cv_download_url) {
+          let fallbackUrl = settings.cv_download_url;
+          const gDriveMatch = fallbackUrl.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
+          if (gDriveMatch) {
+            fallbackUrl = `https://drive.google.com/uc?export=download&id=${gDriveMatch[1]}`;
+          }
+          res.redirect(fallbackUrl);
+        } else {
+          res.status(404).send('CV not found');
+        }
+      }
+    } catch (err) { next(err); }
+  });
   // ── Combined /api/portfolio endpoint ──────────────────────────────────
   // Returns ALL homepage data in a single response, cutting round-trips
   // from 10+ to 1 and making the page load significantly faster.
@@ -681,6 +707,35 @@ function buildApp() {
       const sql = getSql();
       await sql(`DELETE FROM gallery_photos WHERE id = $1`, [req.params.photoId]);
       res.redirect(`/admin/gallery/${req.params.id}/photos`);
+    } catch (err) { next(err); }
+  });
+
+  // --- CV Management ---
+  app.get('/admin/cv', async (req, res, next) => {
+    try {
+      const sql = getSql();
+      const [settings] = await sql(`SELECT cv_download_url FROM site_settings WHERE id = 1`);
+      res.send(layout({
+        title: 'Manage CV',
+        authed: true,
+        body: renderCvAdmin(settings?.cv_download_url),
+        flash: req.query.success ? 'CV updated successfully!' : ''
+      }));
+    } catch (err) { next(err); }
+  });
+
+  app.post('/admin/cv', upload.single('cv_file'), async (req, res, next) => {
+    try {
+      if (req.file) {
+        const sql = getSql();
+        const b64 = req.file.buffer.toString('base64');
+        const dataUri = `data:${req.file.mimetype};base64,${b64}`;
+        
+        await sql(`DELETE FROM cv_files WHERE id = 1`);
+        await sql(`INSERT INTO cv_files (id, file_data, mimetype, filename) VALUES (1, $1, $2, $3)`, [b64, req.file.mimetype, req.file.originalname]);
+        await sql(`UPDATE site_settings SET cv_last_updated = $1 WHERE id = 1`, [new Date().getFullYear().toString()]);
+      }
+      res.redirect('/admin/cv?success=1');
     } catch (err) { next(err); }
   });
 
