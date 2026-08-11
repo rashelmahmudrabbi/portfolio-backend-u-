@@ -1,5 +1,7 @@
 const express = require('express');
 const cors = require('cors');
+const multer = require('multer');
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } }); // 5MB limit
 
 const { getSql } = require('./db');
 const { RESOURCES, serializeRow, splitCommas, splitLines } = require('./resources');
@@ -498,13 +500,18 @@ function buildApp() {
     } catch (err) { next(err); }
   });
 
-  app.post('/admin/gallery/:id/photos/new', async (req, res, next) => {
+  app.post('/admin/gallery/:id/photos/new', upload.single('photo_file'), async (req, res, next) => {
     try {
       const sql = getSql();
       const order = Number(req.body.order) || 0;
+      let dataUri = '';
+      if (req.file) {
+        const b64 = req.file.buffer.toString('base64');
+        dataUri = `data:${req.file.mimetype};base64,${b64}`;
+      }
       await sql(
         `INSERT INTO gallery_photos (event_id, sort_order, src, caption) VALUES ($1, $2, $3, $4)`,
-        [req.params.id, order, req.body.src || '', req.body.caption || '']
+        [req.params.id, order, dataUri, req.body.caption || '']
       );
       res.redirect(`/admin/gallery/${req.params.id}/photos`);
     } catch (err) { next(err); }
@@ -525,14 +532,25 @@ function buildApp() {
     } catch (err) { next(err); }
   });
 
-  app.post('/admin/gallery/:id/photos/:photoId/edit', async (req, res, next) => {
+  app.post('/admin/gallery/:id/photos/:photoId/edit', upload.single('photo_file'), async (req, res, next) => {
     try {
       const sql = getSql();
       const order = Number(req.body.order) || 0;
-      await sql(
-        `UPDATE gallery_photos SET sort_order = $1, src = $2, caption = $3 WHERE id = $4`,
-        [order, req.body.src || '', req.body.caption || '', req.params.photoId]
-      );
+      
+      if (req.file) {
+        const b64 = req.file.buffer.toString('base64');
+        const dataUri = `data:${req.file.mimetype};base64,${b64}`;
+        await sql(
+          `UPDATE gallery_photos SET sort_order = $1, src = $2, caption = $3 WHERE id = $4`,
+          [order, dataUri, req.body.caption || '', req.params.photoId]
+        );
+      } else {
+        await sql(
+          `UPDATE gallery_photos SET sort_order = $1, caption = $2 WHERE id = $3`,
+          [order, req.body.caption || '', req.params.photoId]
+        );
+      }
+      
       res.redirect(`/admin/gallery/${req.params.id}/photos`);
     } catch (err) { next(err); }
   });
@@ -603,7 +621,7 @@ function buildApp() {
   const NEW_GALLERY_EVENT_FIELDS = [
     { key: 'title', label: 'Title', type: 'text' },
     { key: 'year', label: 'Year', type: 'text' },
-    { key: 'photo_src', label: 'Initial Photo URL/Path (Optional)', type: 'text' },
+    { key: 'photo_file', label: 'Upload Initial Photo (Optional)', type: 'file' },
     { key: 'photo_caption', label: 'Initial Photo Caption (Optional)', type: 'text' },
   ];
 
@@ -616,7 +634,7 @@ function buildApp() {
     }));
   });
 
-  app.post('/admin/gallery/new', async (req, res, next) => {
+  app.post('/admin/gallery/new', upload.single('photo_file'), async (req, res, next) => {
     try {
       const sql = getSql();
       const order = Number(req.body.order) || 0;
@@ -627,10 +645,12 @@ function buildApp() {
       
       const eventId = rows[0].id;
       
-      if (req.body.photo_src && req.body.photo_src.trim() !== '') {
+      if (req.file) {
+        const b64 = req.file.buffer.toString('base64');
+        const dataUri = `data:${req.file.mimetype};base64,${b64}`;
         await sql(
           `INSERT INTO gallery_photos (event_id, sort_order, src, caption) VALUES ($1, 0, $2, $3)`,
-          [eventId, req.body.photo_src, req.body.photo_caption || '']
+          [eventId, dataUri, req.body.photo_caption || '']
         );
       }
       
@@ -641,7 +661,7 @@ function buildApp() {
   const EDIT_GALLERY_EVENT_FIELDS = [
     { key: 'title', label: 'Title', type: 'text' },
     { key: 'year', label: 'Year', type: 'text' },
-    { key: 'photo_src', label: 'Add an additional Photo URL/Path (Optional)', type: 'text' },
+    { key: 'photo_file', label: 'Upload an additional Photo (Optional)', type: 'file' },
     { key: 'photo_caption', label: 'New Photo Caption (Optional)', type: 'text' },
   ];
 
@@ -659,7 +679,7 @@ function buildApp() {
     } catch (err) { next(err); }
   });
 
-  app.post('/admin/gallery/:id/edit', async (req, res, next) => {
+  app.post('/admin/gallery/:id/edit', upload.single('photo_file'), async (req, res, next) => {
     try {
       const sql = getSql();
       const order = Number(req.body.order) || 0;
@@ -668,10 +688,12 @@ function buildApp() {
         [order, req.body.title || '', req.body.year || '', req.params.id]
       );
       
-      if (req.body.photo_src && req.body.photo_src.trim() !== '') {
+      if (req.file) {
+        const b64 = req.file.buffer.toString('base64');
+        const dataUri = `data:${req.file.mimetype};base64,${b64}`;
         await sql(
           `INSERT INTO gallery_photos (event_id, sort_order, src, caption) VALUES ($1, 0, $2, $3)`,
-          [req.params.id, req.body.photo_src, req.body.photo_caption || '']
+          [req.params.id, dataUri, req.body.photo_caption || '']
         );
       }
       
@@ -718,7 +740,7 @@ function extractValues(fields, body) {
 }
 
 const PHOTO_FIELDS = [
-  { key: 'src', label: 'Image path/URL', type: 'text' },
+  { key: 'photo_file', label: 'Upload Photo (leaves existing if empty)', type: 'file' },
   { key: 'caption', label: 'Caption', type: 'text' },
 ];
 

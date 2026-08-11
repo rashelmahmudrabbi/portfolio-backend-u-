@@ -188,6 +188,9 @@ function fieldInput(field, value) {
   if (field.type === 'number') {
     return `<input type="number" name="${esc(field.key)}" value="${esc(v)}" />`;
   }
+  if (field.type === 'file') {
+    return `<input type="file" name="${esc(field.key)}" accept="image/*" />`;
+  }
   return `<input type="text" name="${esc(field.key)}" value="${esc(v)}" />`;
 }
 
@@ -201,7 +204,9 @@ function renderForm({ fields, row = {}, action, submitLabel, includeOrder = true
   const orderRow = includeOrder
     ? `<label for="order">Sort order (lower shows first)</label><input type="number" name="order" value="${esc(row.sort_order ?? row.order ?? 0)}" />`
     : '';
-  return `<form method="post" action="${esc(action)}">
+  const hasFile = fields.some((f) => f.type === 'file');
+  const enctype = hasFile ? 'enctype="multipart/form-data"' : '';
+  return `<form method="post" action="${esc(action)}" ${enctype}>
     ${extraHidden}
     ${rows}
     ${orderRow}
