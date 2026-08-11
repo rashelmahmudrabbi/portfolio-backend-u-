@@ -377,7 +377,7 @@ function buildApp() {
       items: [
         { key: 'projects', label: 'Projects', desc: 'Manage projects', icon: 'bi-kanban', color: '#10b981', table: 'projects' },
         { key: 'gallery', label: 'Gallery Events', desc: 'Events + photos', icon: 'bi-images', color: '#14b8a6', table: 'gallery_events' },
-        { key: 'blog', label: 'Blog Posts', desc: 'Manage blog posts', icon: 'bi-pencil-square', color: '#06b6d4', table: 'blog' }
+        { key: 'blog', label: 'Blog Posts', desc: 'Manage blog posts', icon: 'bi-pencil-square', color: '#06b6d4', table: 'blog_posts' }
       ]
     },
     {
