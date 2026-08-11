@@ -223,12 +223,12 @@ function renderTable({ resourceKey, label, fields, rows, extraCol }) {
       return `<tr>
         ${cells}
         <td>${r.sort_order ?? 0}</td>
-        <td style="white-space:nowrap;">
+        <td style="white-space:nowrap; text-align: right;">
+          ${extraCol ? extraCol(r) : ''}
           <a class="link" href="/admin/${esc(resourceKey)}/${r.id}/edit">Edit</a>
           <form class="inline" method="post" action="/admin/${esc(resourceKey)}/${r.id}/delete" onsubmit="return confirm('Delete this row?');">
-            <button class="link" style="background:none;border:none;color:#dc2626;cursor:pointer;padding:0;">Delete</button>
+            <button class="link" style="background:none;border:none;color:var(--danger);cursor:pointer;padding:0;margin-right:0;">Delete</button>
           </form>
-          ${extraCol ? extraCol(r) : ''}
         </td>
       </tr>`;
     })

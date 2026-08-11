@@ -594,7 +594,7 @@ function buildApp() {
           resourceKey: 'gallery', label: 'Gallery Events',
           fields: RESOURCES.gallery ? RESOURCES.gallery.fields : GALLERY_EVENT_FIELDS,
           rows,
-          extraCol: (r) => `<a class="link" href="/admin/gallery/${r.id}/photos">Photos</a>`,
+          extraCol: (r) => `<a class="btn secondary" style="padding:4px 10px; font-size:12px; margin-right:16px;" href="/admin/gallery/${r.id}/photos">Manage Photos</a>`,
         }),
       }));
     } catch (err) { next(err); }
