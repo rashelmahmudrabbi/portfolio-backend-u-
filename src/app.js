@@ -104,6 +104,13 @@ function buildApp() {
   app.get('/api/cv/download', async (req, res, next) => {
     try {
       const sql = getSql();
+      // Auto-create table if it doesn't exist
+      await sql(`CREATE TABLE IF NOT EXISTS cv_files (
+        id INTEGER PRIMARY KEY DEFAULT 1 CHECK (id = 1),
+        file_data TEXT,
+        mimetype TEXT,
+        filename TEXT
+      )`);
       const [cvFile] = await sql(`SELECT file_data, mimetype, filename FROM cv_files WHERE id = 1`);
       
       if (cvFile && cvFile.file_data) {
@@ -731,6 +738,12 @@ function buildApp() {
         const b64 = req.file.buffer.toString('base64');
         const dataUri = `data:${req.file.mimetype};base64,${b64}`;
         
+        await sql(`CREATE TABLE IF NOT EXISTS cv_files (
+          id INTEGER PRIMARY KEY DEFAULT 1 CHECK (id = 1),
+          file_data TEXT,
+          mimetype TEXT,
+          filename TEXT
+        )`);
         await sql(`DELETE FROM cv_files WHERE id = 1`);
         await sql(`INSERT INTO cv_files (id, file_data, mimetype, filename) VALUES (1, $1, $2, $3)`, [b64, req.file.mimetype, req.file.originalname]);
         await sql(`UPDATE site_settings SET cv_last_updated = $1 WHERE id = 1`, [new Date().getFullYear().toString()]);
