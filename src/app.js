@@ -638,6 +638,13 @@ function buildApp() {
     } catch (err) { next(err); }
   });
 
+  const EDIT_GALLERY_EVENT_FIELDS = [
+    { key: 'title', label: 'Title', type: 'text' },
+    { key: 'year', label: 'Year', type: 'text' },
+    { key: 'photo_src', label: 'Add an additional Photo URL/Path (Optional)', type: 'text' },
+    { key: 'photo_caption', label: 'New Photo Caption (Optional)', type: 'text' },
+  ];
+
   app.get('/admin/gallery/:id/edit', async (req, res, next) => {
     try {
       const sql = getSql();
@@ -646,7 +653,7 @@ function buildApp() {
       res.send(layout({
         title: 'Edit Gallery Event', authed: true,
         body: `<h1>Edit Gallery Event</h1><div class="card">${renderForm({
-          fields: GALLERY_EVENT_FIELDS, row, action: `/admin/gallery/${req.params.id}/edit`, submitLabel: 'Save',
+          fields: EDIT_GALLERY_EVENT_FIELDS, row, action: `/admin/gallery/${req.params.id}/edit`, submitLabel: 'Save',
         })}</div>`,
       }));
     } catch (err) { next(err); }
@@ -660,6 +667,14 @@ function buildApp() {
         `UPDATE gallery_events SET sort_order = $1, title = $2, year = $3 WHERE id = $4`,
         [order, req.body.title || '', req.body.year || '', req.params.id]
       );
+      
+      if (req.body.photo_src && req.body.photo_src.trim() !== '') {
+        await sql(
+          `INSERT INTO gallery_photos (event_id, sort_order, src, caption) VALUES ($1, 0, $2, $3)`,
+          [req.params.id, req.body.photo_src, req.body.photo_caption || '']
+        );
+      }
+      
       res.redirect('/admin/gallery');
     } catch (err) { next(err); }
   });
