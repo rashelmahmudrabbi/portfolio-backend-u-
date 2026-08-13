@@ -16,6 +16,7 @@ CREATE TABLE IF NOT EXISTS site_settings (
   phone TEXT DEFAULT '',
   location TEXT DEFAULT '',
   avatar TEXT DEFAULT '',
+  hero_status_text TEXT DEFAULT 'Open to research',
   objective TEXT DEFAULT '',
   stat_publications INTEGER DEFAULT 0,
   stat_projects INTEGER DEFAULT 0,

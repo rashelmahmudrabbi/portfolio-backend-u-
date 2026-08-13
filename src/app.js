@@ -30,6 +30,7 @@ async function ensureTables(sql) {
       await sql(`ALTER TABLE spotlights ADD COLUMN IF NOT EXISTS image TEXT DEFAULT ''`);
     } catch (colErr) {}
     try {
+      await sql(`ALTER TABLE site_settings ADD COLUMN IF NOT EXISTS hero_status_text TEXT DEFAULT 'Open to research'`);
       await sql(`ALTER TABLE site_settings ADD COLUMN IF NOT EXISTS about_kicker TEXT DEFAULT 'ABOUT ME'`);
       await sql(`ALTER TABLE site_settings ADD COLUMN IF NOT EXISTS about_headline TEXT DEFAULT 'AI research with a practical mindset.'`);
       await sql(`ALTER TABLE site_settings ADD COLUMN IF NOT EXISTS about_text TEXT DEFAULT ''`);
@@ -241,6 +242,7 @@ function buildApp() {
           profile: {
             name: s.name || '', title: s.title || '', email: s.email || '',
             phone: s.phone || '', location: s.location || '', avatar: s.avatar || '',
+            heroStatusText: s.hero_status_text || 'Open to research',
             objective: s.objective || '',
             stats: {
               publications: s.stat_publications || 0, projects: s.stat_projects || 0,
@@ -944,15 +946,26 @@ function buildApp() {
     } catch (err) { next(err); }
   });
 
-  app.post('/admin/settings', async (req, res, next) => {
+  app.post('/admin/settings', upload.single('avatar_file'), async (req, res, next) => {
     try {
       const sql = getSql();
+      await ensureTables(sql);
       const values = extractValues(SETTINGS_FIELDS, req.body);
-      const cols = SETTINGS_FIELDS.map((f) => f.key);
-      const setSql = cols.map((c, i) => `${c} = $${i + 1}`).join(', ');
-      const params = cols.map((c) => values[c]);
+      
+      if (req.file) {
+        const b64 = req.file.buffer.toString('base64');
+        values.avatar = `data:${req.file.mimetype};base64,${b64}`;
+      } else if (!values.avatar) {
+        const [existing] = await sql`SELECT avatar FROM site_settings WHERE id = 1`;
+        if (existing && existing.avatar) values.avatar = existing.avatar;
+      }
+
+      const dbFields = SETTINGS_FIELDS.filter(f => f.key !== 'avatar_file');
+      const cols = dbFields.map((f) => f.key);
+      const setSql = cols.map((c, i) => `${c} = $${i + 2}`).join(', ');
+      const params = [1, ...cols.map((c) => values[c])];
       await sql(
-        `INSERT INTO site_settings (id, ${cols.join(', ')}) VALUES (1, ${cols.map((_, i) => `$${i + 1}`).join(', ')})
+        `INSERT INTO site_settings (id, ${cols.join(', ')}) VALUES (${params.map((_, i) => `$${i + 1}`).join(', ')})
          ON CONFLICT (id) DO UPDATE SET ${setSql}`,
         params
       );
@@ -1114,7 +1127,9 @@ const SETTINGS_FIELDS = [
   { key: 'email', label: 'Email', type: 'text' },
   { key: 'phone', label: 'Phone', type: 'text' },
   { key: 'location', label: 'Location', type: 'text' },
-  { key: 'avatar', label: 'Avatar (path or URL)', type: 'text' },
+  { key: 'avatar_file', label: 'Browse / Upload Profile Avatar Photo (JPG, PNG, WebP)', type: 'file' },
+  { key: 'avatar', label: 'Or Avatar Image URL (If not browsing a file)', type: 'text' },
+  { key: 'hero_status_text', label: 'Hero Avatar Status Button Text (e.g. Open to research)', type: 'text' },
   { key: 'objective', label: 'About Me Bio / Objective (Short summary for CV / Profile cards)', type: 'textarea' },
   { key: 'stat_publications', label: 'Stat: Publications', type: 'number' },
   { key: 'stat_projects', label: 'Stat: Projects', type: 'number' },
