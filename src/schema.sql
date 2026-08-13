@@ -89,6 +89,7 @@ CREATE TABLE IF NOT EXISTS spotlights (
   title TEXT DEFAULT '',
   description TEXT DEFAULT '',
   tag TEXT DEFAULT '',
+  image TEXT DEFAULT '',
   link_url TEXT DEFAULT '',
   link_label TEXT DEFAULT 'Explore'
 );

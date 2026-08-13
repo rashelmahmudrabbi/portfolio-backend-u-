@@ -21,10 +21,14 @@ async function ensureTables(sql) {
         title TEXT DEFAULT '',
         description TEXT DEFAULT '',
         tag TEXT DEFAULT '',
+        image TEXT DEFAULT '',
         link_url TEXT DEFAULT '',
         link_label TEXT DEFAULT 'Explore'
       );
     `);
+    try {
+      await sql(`ALTER TABLE spotlights ADD COLUMN IF NOT EXISTS image TEXT DEFAULT ''`);
+    } catch (colErr) {}
   } catch (e) {
     console.error('Auto-migration error spotlights:', e.message);
   }
