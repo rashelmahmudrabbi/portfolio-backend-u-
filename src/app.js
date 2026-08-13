@@ -32,6 +32,8 @@ async function ensureTables(sql) {
     try {
       await sql(`ALTER TABLE site_settings ADD COLUMN IF NOT EXISTS about_kicker TEXT DEFAULT 'ABOUT ME'`);
       await sql(`ALTER TABLE site_settings ADD COLUMN IF NOT EXISTS about_headline TEXT DEFAULT 'AI research with a practical mindset.'`);
+      await sql(`ALTER TABLE site_settings ADD COLUMN IF NOT EXISTS about_pill_1 TEXT DEFAULT 'AI & Computer Vision'`);
+      await sql(`ALTER TABLE site_settings ADD COLUMN IF NOT EXISTS about_pill_2 TEXT DEFAULT 'Medical Image Analysis'`);
       await sql(`ALTER TABLE site_settings ADD COLUMN IF NOT EXISTS about_status_text TEXT DEFAULT 'Open to research opportunities'`);
     } catch (colErr2) {}
   } catch (e) {
@@ -244,6 +246,8 @@ function buildApp() {
           about: {
             kicker: s.about_kicker || 'ABOUT ME',
             headline: s.about_headline || 'AI research with a practical mindset.',
+            pill1: s.about_pill_1 || 'AI & Computer Vision',
+            pill2: s.about_pill_2 || 'Medical Image Analysis',
             statusText: s.about_status_text || 'Open to research opportunities',
           },
           personalInfo: {
@@ -1032,6 +1036,8 @@ const SETTINGS_FIELDS = [
   { key: 'objective', label: 'About Me Bio / Narrative (Supports HTML)', type: 'textarea' },
   { key: 'about_kicker', label: 'About Section Kicker (Default: ABOUT ME)', type: 'text' },
   { key: 'about_headline', label: 'About Section Headline', type: 'text' },
+  { key: 'about_pill_1', label: 'About Meta Pill 1 (e.g. AI & Computer Vision)', type: 'text' },
+  { key: 'about_pill_2', label: 'About Meta Pill 2 (e.g. Medical Image Analysis)', type: 'text' },
   { key: 'about_status_text', label: 'Research Status Badge Text', type: 'text' },
   { key: 'stat_publications', label: 'Stat: Publications', type: 'number' },
   { key: 'stat_projects', label: 'Stat: Projects', type: 'number' },

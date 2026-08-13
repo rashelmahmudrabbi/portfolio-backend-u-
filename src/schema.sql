@@ -41,6 +41,8 @@ CREATE TABLE IF NOT EXISTS site_settings (
   address TEXT DEFAULT '',
   about_kicker TEXT DEFAULT 'ABOUT ME',
   about_headline TEXT DEFAULT 'AI research with a practical mindset.',
+  about_pill_1 TEXT DEFAULT 'AI & Computer Vision',
+  about_pill_2 TEXT DEFAULT 'Medical Image Analysis',
   about_status_text TEXT DEFAULT 'Open to research opportunities',
   teaching_philosophy TEXT DEFAULT '',
   teaching_mentoring_text TEXT DEFAULT '',
