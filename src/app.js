@@ -32,6 +32,7 @@ async function ensureTables(sql) {
     try {
       await sql(`ALTER TABLE site_settings ADD COLUMN IF NOT EXISTS about_kicker TEXT DEFAULT 'ABOUT ME'`);
       await sql(`ALTER TABLE site_settings ADD COLUMN IF NOT EXISTS about_headline TEXT DEFAULT 'AI research with a practical mindset.'`);
+      await sql(`ALTER TABLE site_settings ADD COLUMN IF NOT EXISTS about_text TEXT DEFAULT ''`);
       await sql(`ALTER TABLE site_settings ADD COLUMN IF NOT EXISTS about_pill_1 TEXT DEFAULT 'AI & Computer Vision'`);
       await sql(`ALTER TABLE site_settings ADD COLUMN IF NOT EXISTS about_pill_2 TEXT DEFAULT 'Medical Image Analysis'`);
       await sql(`ALTER TABLE site_settings ADD COLUMN IF NOT EXISTS about_status_text TEXT DEFAULT 'Open to research opportunities'`);
@@ -260,6 +261,7 @@ function buildApp() {
           about: {
             kicker: s.about_kicker || 'ABOUT ME',
             headline: s.about_headline || 'AI research with a practical mindset.',
+            text: s.about_text || '',
             statusText: s.about_status_text || 'Open to research opportunities',
             pills: pillRows && pillRows.length > 0 ? pillRows.map(p => ({
               id: p.id,
@@ -1052,10 +1054,11 @@ const SETTINGS_FIELDS = [
   { key: 'phone', label: 'Phone', type: 'text' },
   { key: 'location', label: 'Location', type: 'text' },
   { key: 'avatar', label: 'Avatar (path or URL)', type: 'text' },
-  { key: 'objective', label: 'About Me Bio / Narrative (Paragraphs below pills - separate paragraphs with empty line or use HTML)', type: 'textarea' },
-  { key: 'about_kicker', label: 'About Section Kicker (Default: ABOUT ME)', type: 'text' },
-  { key: 'about_headline', label: 'About Section Headline', type: 'text' },
-  { key: 'about_status_text', label: 'Research Status Badge Text (Green pulse pill)', type: 'text' },
+  { key: 'objective', label: '1. About Me Bio / Objective (Short summary for CV / Profile cards)', type: 'textarea' },
+  { key: 'about_kicker', label: '2. About Section Kicker (Default: ABOUT ME)', type: 'text' },
+  { key: 'about_headline', label: '3. About Section Headline', type: 'text' },
+  { key: 'about_text', label: '4. About Section Body Text (The 3 detailed research paragraphs below the pills)', type: 'textarea' },
+  { key: 'about_status_text', label: '5. Research Status Badge Text (Green pulse pill)', type: 'text' },
   { key: 'stat_publications', label: 'Stat: Publications', type: 'number' },
   { key: 'stat_projects', label: 'Stat: Projects', type: 'number' },
   { key: 'stat_awards', label: 'Stat: Awards', type: 'number' },
