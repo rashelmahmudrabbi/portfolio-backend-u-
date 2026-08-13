@@ -144,7 +144,7 @@ function buildApp() {
       // Fire all queries in parallel
       const [settingsRow, interests, langs, roles, areas,
              eduRows, expRows, pubRows, projRows, certRows,
-             awardRows, actRows, galleryEvents, galleryPhotos, refRows, spotRows] = await Promise.all([
+             awardRows, actRows, galleryEvents, galleryPhotos, refRows, spotRows, courseRows] = await Promise.all([
         sql`SELECT * FROM site_settings WHERE id = 1`,
         sql`SELECT * FROM research_interests ORDER BY sort_order ASC, id ASC`,
         sql`SELECT * FROM spoken_languages ORDER BY sort_order ASC, id ASC`,
@@ -161,6 +161,7 @@ function buildApp() {
         sql`SELECT * FROM gallery_photos ORDER BY sort_order ASC, id ASC`,
         sql`SELECT * FROM reference_list ORDER BY sort_order ASC, id ASC`,
         sql`SELECT * FROM spotlights ORDER BY sort_order ASC, id ASC`,
+        sql`SELECT * FROM courses ORDER BY sort_order ASC, id ASC`,
       ]);
 
       const s = settingsRow[0] || {};
@@ -222,6 +223,7 @@ function buildApp() {
         awards: awardRows.map((r) => serializeRow('awards', r)),
         activities: actRows.map((r) => serializeRow('activities', r)),
         spotlights: spotRows.map((r) => serializeRow('spotlights', r)),
+        courses: courseRows.map((r) => serializeRow('courses', r)),
         gallery: galleryEvents.map((e) => ({
           id: e.id, title: e.title, year: e.year, order: e.sort_order,
           photos: byEvent[e.id] || [],

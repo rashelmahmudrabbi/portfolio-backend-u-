@@ -419,6 +419,7 @@ ${authed ? `
 
     <div class="sidebar-category">Teaching</div>
     <a href="/admin/teaching-roles"><i class="bi bi-person-badge"></i> Teaching Roles</a>
+    <a href="/admin/courses"><i class="bi bi-mortarboard"></i> Courses &amp; Workshops</a>
     <a href="/admin/teaching-areas"><i class="bi bi-book-half"></i> Teaching Areas</a>
   </div>
   
