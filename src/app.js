@@ -29,6 +29,11 @@ async function ensureTables(sql) {
     try {
       await sql(`ALTER TABLE spotlights ADD COLUMN IF NOT EXISTS image TEXT DEFAULT ''`);
     } catch (colErr) {}
+    try {
+      await sql(`ALTER TABLE site_settings ADD COLUMN IF NOT EXISTS about_kicker TEXT DEFAULT 'ABOUT ME'`);
+      await sql(`ALTER TABLE site_settings ADD COLUMN IF NOT EXISTS about_headline TEXT DEFAULT 'AI research with a practical mindset.'`);
+      await sql(`ALTER TABLE site_settings ADD COLUMN IF NOT EXISTS about_status_text TEXT DEFAULT 'Open to research opportunities'`);
+    } catch (colErr2) {}
   } catch (e) {
     console.error('Auto-migration error spotlights:', e.message);
   }
@@ -236,6 +241,11 @@ function buildApp() {
             tools: splitCommas(s.skills_tools), researchMethods: splitCommas(s.skills_research_methods),
           },
           spokenLanguages: langs.map((l) => ({ name: l.name, level: l.level })),
+          about: {
+            kicker: s.about_kicker || 'ABOUT ME',
+            headline: s.about_headline || 'AI research with a practical mindset.',
+            statusText: s.about_status_text || 'Open to research opportunities',
+          },
           personalInfo: {
             fatherName: s.father_name || '',
             motherName: s.mother_name || '',
@@ -1019,7 +1029,10 @@ const SETTINGS_FIELDS = [
   { key: 'phone', label: 'Phone', type: 'text' },
   { key: 'location', label: 'Location', type: 'text' },
   { key: 'avatar', label: 'Avatar (path or URL)', type: 'text' },
-  { key: 'objective', label: 'Objective', type: 'textarea' },
+  { key: 'objective', label: 'About Me Bio / Narrative (Supports HTML)', type: 'textarea' },
+  { key: 'about_kicker', label: 'About Section Kicker (Default: ABOUT ME)', type: 'text' },
+  { key: 'about_headline', label: 'About Section Headline', type: 'text' },
+  { key: 'about_status_text', label: 'Research Status Badge Text', type: 'text' },
   { key: 'stat_publications', label: 'Stat: Publications', type: 'number' },
   { key: 'stat_projects', label: 'Stat: Projects', type: 'number' },
   { key: 'stat_awards', label: 'Stat: Awards', type: 'number' },
