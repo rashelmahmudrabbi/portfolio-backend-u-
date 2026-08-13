@@ -395,8 +395,8 @@ ${authed ? `
   <div class="sidebar-nav">
     <div class="sidebar-category">Overview</div>
     <a href="/admin"><i class="bi bi-grid-fill"></i> Dashboard</a>
+    <a href="/admin/about"><i class="bi bi-person-lines-fill"></i> About Section &amp; Pills</a>
     <a href="/admin/spotlights"><i class="bi bi-stars"></i> Spotlight Highlights</a>
-    <a href="/admin/about-pills"><i class="bi bi-tags-fill"></i> About Meta Pills</a>
     <a href="/admin/settings"><i class="bi bi-gear-fill"></i> Site Settings</a>
     <a href="/admin/cv"><i class="bi bi-file-earmark-person-fill"></i> Manage CV</a>
     
@@ -569,21 +569,113 @@ function truncate(v, n) {
   return s.length > n ? s.slice(0, n) + '…' : s;
 }
 
-function renderCvAdmin(currentUrl) {
-  return `<div class="card">
-    <h2>Manage CV</h2>
-    <p class="muted" style="margin-bottom: 24px;">Upload your CV as a PDF file. This will be securely stored and served to visitors when they click "Download CV" on the website.
-    <br><br>
-    Currently active CV Link/Data: <br><code style="word-break: break-all; background: #eee; padding: 4px; border-radius: 4px; display: inline-block; margin-top: 4px;">${esc(currentUrl ? truncate(currentUrl, 100) : 'None')}</code>
-    </p>
-    <form method="post" action="/admin/cv" enctype="multipart/form-data">
-      <div style="margin-bottom: 16px;">
-        <label style="display:block; font-weight: 500; margin-bottom: 8px;">Upload New CV (PDF)</label>
-        <input type="file" name="cv_file" accept="application/pdf" style="display:block; padding: 8px; border: 1px solid var(--border); border-radius: 6px; width: 100%;" required />
+function renderAboutAdmin({ settings = {}, pills = [] }) {
+  const pillRows = pills.map(p => `
+    <tr>
+      <td><i class="bi ${esc(p.icon || 'bi-cpu')} text-${esc(p.color_type || 'primary')}" style="font-size:18px;"></i> <code>${esc(p.icon || 'bi-cpu')}</code></td>
+      <td><strong>${esc(p.label)}</strong></td>
+      <td><span class="badge" style="text-transform:capitalize; padding:3px 8px; border-radius:12px; background:var(--primary-tint); font-size:11px;">${esc(p.color_type || 'primary')}</span></td>
+      <td>${p.sort_order ?? 0}</td>
+      <td style="text-align:right; white-space:nowrap;">
+        <a class="link" href="/admin/about-pills/${p.id}/edit">Edit</a>
+        <form class="inline" method="post" action="/admin/about-pills/${p.id}/delete" onsubmit="return confirm('Delete this pill?');">
+          <button class="link" style="background:none;border:none;color:var(--danger);cursor:pointer;padding:0;margin-left:8px;">Delete</button>
+        </form>
+      </td>
+    </tr>
+  `).join('');
+
+  return `
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;">
+    <div>
+      <h1 style="margin:0 0 4px 0;">About Section Manager</h1>
+      <p class="muted" style="margin:0;">Control your headline, status badge, rich text paragraphs, and metadata pills in one place.</p>
+    </div>
+    <a href="https://rashelmahmudrabbi.github.io/#objective" target="_blank" class="btn secondary" style="font-size:13px;">
+      <i class="bi bi-box-arrow-up-right"></i> View on Live Site
+    </a>
+  </div>
+
+  <div class="card" style="margin-bottom:32px;">
+    <h2 style="margin-top:0; margin-bottom:18px; font-size:20px;"><i class="bi bi-card-text text-primary me-2"></i> Section Content & Body Text</h2>
+    <form method="post" action="/admin/about">
+      <div style="margin-bottom:16px;">
+        <label style="display:block; font-weight:600; margin-bottom:6px;">Section Kicker (Top Small Subheading)</label>
+        <input type="text" name="about_kicker" value="${esc(settings.about_kicker || 'ABOUT ME')}" style="width:100%;" required />
       </div>
-      <button class="btn" type="submit">Upload CV</button>
+
+      <div style="margin-bottom:16px;">
+        <label style="display:block; font-weight:600; margin-bottom:6px;">Main Headline</label>
+        <input type="text" name="about_headline" value="${esc(settings.about_headline || 'AI research with a practical mindset.')}" style="width:100%;" required />
+      </div>
+
+      <div style="margin-bottom:16px;">
+        <label style="display:block; font-weight:600; margin-bottom:6px;">Research Status Pill Text (Green pulse dot)</label>
+        <input type="text" name="about_status_text" value="${esc(settings.about_status_text || 'Open to research opportunities')}" style="width:100%;" required />
+      </div>
+
+      <div style="margin-bottom:18px;">
+        <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:6px;">
+          <label style="font-weight:600; margin:0;">Body Text & Paragraphs (Supports Rich Formatting)</label>
+          <div style="display:flex; gap:6px;">
+            <button type="button" class="btn secondary" style="padding:2px 10px; font-size:12px; font-weight:bold;" onclick="wrapFormat('strong')" title="Bold"><b>B</b></button>
+            <button type="button" class="btn secondary" style="padding:2px 10px; font-size:12px; font-style:italic;" onclick="wrapFormat('em')" title="Italic"><i>I</i></button>
+            <button type="button" class="btn secondary" style="padding:2px 10px; font-size:12px;" onclick="wrapFormat('p')" title="Paragraph">&lt;p&gt;</button>
+          </div>
+        </div>
+        <textarea id="aboutBodyArea" name="about_text" style="width:100%; min-height:220px; font-family:inherit; font-size:14.5px; line-height:1.6;" placeholder="Separate paragraphs with an empty line, or use <strong>bold</strong> and <em>italic</em> formatting.">${esc(settings.about_text || '')}</textarea>
+        <small class="muted" style="display:block; margin-top:6px;">Tip: Leave empty to automatically use the default 3-paragraph executive narrative, or type your own custom paragraphs with <b>bold</b> and <i>italic</i> styling.</small>
+      </div>
+
+      <div class="actions">
+        <button class="btn" type="submit">Save About Section</button>
+      </div>
     </form>
-  </div>`;
+  </div>
+
+  <div class="card">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+      <div>
+        <h2 style="margin:0 0 4px 0; font-size:20px;"><i class="bi bi-tags-fill text-success me-2"></i> About Meta Pills</h2>
+        <p class="muted" style="margin:0; font-size:13.5px;">These custom badge pills appear between the headline and the body paragraphs.</p>
+      </div>
+      <a class="btn" href="/admin/about-pills/new">+ Add New Pill</a>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Icon</th>
+          <th>Label</th>
+          <th>Accent Color</th>
+          <th>Sort Order</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        ${pillRows || `<tr><td colspan="5" class="muted">No custom pills yet (using default system pills).</td></tr>`}
+      </tbody>
+    </table>
+  </div>
+
+  <script>
+    function wrapFormat(tag) {
+      const textarea = document.getElementById('aboutBodyArea');
+      if (!textarea) return;
+      const start = textarea.selectionStart;
+      const end = textarea.selectionEnd;
+      const selected = textarea.value.substring(start, end);
+      const openTag = '<' + tag + '>';
+      const closeTag = '</' + tag + '>';
+      const replacement = selected ? (openTag + selected + closeTag) : (openTag + closeTag);
+      
+      textarea.value = textarea.value.substring(0, start) + replacement + textarea.value.substring(end);
+      textarea.focus();
+      textarea.setSelectionRange(start + openTag.length, start + openTag.length + selected.length);
+    }
+  </script>
+  `;
 }
 
-module.exports = { esc, layout, renderForm, renderTable, fieldInput, renderCvAdmin };
+module.exports = { esc, layout, renderForm, renderTable, fieldInput, renderCvAdmin, renderAboutAdmin };
+

@@ -6,7 +6,7 @@ const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 *
 const { getSql } = require('./db');
 const { RESOURCES, serializeRow, splitCommas, splitLines } = require('./resources');
 const auth = require('./auth');
-const { layout, renderForm, renderTable, esc, renderCvAdmin } = require('./views');
+const { layout, renderForm, renderTable, esc, renderCvAdmin, renderAboutAdmin } = require('./views');
 
 let tablesEnsured = false;
 async function ensureTables(sql) {
@@ -524,9 +524,9 @@ function buildApp() {
     {
       title: 'Core Info',
       items: [
-        { key: 'settings', label: 'Site Settings', desc: 'Profile, socials, skills, personal info', icon: 'bi-gear-fill', color: '#6366f1', table: null },
-        { key: 'about-pills', label: 'About Meta Pills', desc: 'Custom metadata badges for About section', icon: 'bi-tags-fill', color: '#10b981', table: 'about_pills' },
+        { key: 'about', label: 'About Section & Pills', desc: 'Headline, narrative paragraphs & meta pills', icon: 'bi-person-lines-fill', color: '#10b981', table: 'about_pills' },
         { key: 'spotlights', label: 'Spotlight Highlights', desc: 'Hero slideshow highlight cards', icon: 'bi-stars', color: '#f59e0b', table: 'spotlights' },
+        { key: 'settings', label: 'Site Settings', desc: 'Profile, socials, skills, personal info', icon: 'bi-gear-fill', color: '#6366f1', table: null },
         { key: 'spoken-languages', label: 'Spoken Languages', desc: 'Manage spoken languages', icon: 'bi-translate', color: '#8b5cf6', table: 'spoken_languages' }
       ]
     },
@@ -861,6 +861,40 @@ function buildApp() {
     } catch (err) { next(err); }
   });
 
+  // --- Dedicated About Section & Meta Pills Unified Manager ---
+  app.get('/admin/about', async (req, res, next) => {
+    try {
+      const sql = getSql();
+      await ensureTables(sql);
+      const [settingsRow] = await sql`SELECT * FROM site_settings WHERE id = 1`;
+      const pills = await sql`SELECT * FROM about_pills ORDER BY sort_order ASC, id ASC`;
+      res.send(layout({
+        title: 'About Section & Pills',
+        authed: true,
+        body: renderAboutAdmin({ settings: settingsRow || {}, pills }),
+        flash: req.query.success ? 'About section saved successfully!' : null
+      }));
+    } catch (err) { next(err); }
+  });
+
+  app.post('/admin/about', async (req, res, next) => {
+    try {
+      const sql = getSql();
+      await ensureTables(sql);
+      const { about_kicker, about_headline, about_status_text, about_text } = req.body;
+      await sql(
+        `UPDATE site_settings SET
+          about_kicker = $1,
+          about_headline = $2,
+          about_status_text = $3,
+          about_text = $4
+        WHERE id = 1`,
+        [about_kicker || 'ABOUT ME', about_headline || '', about_status_text || '', about_text || '']
+      );
+      res.redirect('/admin/about?success=1');
+    } catch (err) { next(err); }
+  });
+
   // --- Site Settings (singleton) ---
   app.get('/admin/settings', async (req, res, next) => {
     try {
@@ -1054,11 +1088,7 @@ const SETTINGS_FIELDS = [
   { key: 'phone', label: 'Phone', type: 'text' },
   { key: 'location', label: 'Location', type: 'text' },
   { key: 'avatar', label: 'Avatar (path or URL)', type: 'text' },
-  { key: 'objective', label: '1. About Me Bio / Objective (Short summary for CV / Profile cards)', type: 'textarea' },
-  { key: 'about_kicker', label: '2. About Section Kicker (Default: ABOUT ME)', type: 'text' },
-  { key: 'about_headline', label: '3. About Section Headline', type: 'text' },
-  { key: 'about_text', label: '4. About Section Body Text (The 3 detailed research paragraphs below the pills)', type: 'textarea' },
-  { key: 'about_status_text', label: '5. Research Status Badge Text (Green pulse pill)', type: 'text' },
+  { key: 'objective', label: 'About Me Bio / Objective (Short summary for CV / Profile cards)', type: 'textarea' },
   { key: 'stat_publications', label: 'Stat: Publications', type: 'number' },
   { key: 'stat_projects', label: 'Stat: Projects', type: 'number' },
   { key: 'stat_awards', label: 'Stat: Awards', type: 'number' },
