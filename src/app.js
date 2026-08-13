@@ -8,6 +8,37 @@ const { RESOURCES, serializeRow, splitCommas, splitLines } = require('./resource
 const auth = require('./auth');
 const { layout, renderForm, renderTable, esc, renderCvAdmin } = require('./views');
 
+let tablesEnsured = false;
+async function ensureTables(sql) {
+  if (tablesEnsured) return;
+  try {
+    await sql(`
+      CREATE TABLE IF NOT EXISTS spotlights (
+        id SERIAL PRIMARY KEY,
+        sort_order INTEGER DEFAULT 0,
+        badge TEXT DEFAULT 'Top Highlight',
+        badge_type TEXT DEFAULT 'badge-pub',
+        title TEXT DEFAULT '',
+        description TEXT DEFAULT '',
+        tag TEXT DEFAULT '',
+        link_url TEXT DEFAULT '',
+        link_label TEXT DEFAULT 'Explore'
+      );
+      CREATE TABLE IF NOT EXISTS courses (
+        id SERIAL PRIMARY KEY,
+        sort_order INTEGER DEFAULT 0,
+        name TEXT DEFAULT '',
+        institution TEXT DEFAULT '',
+        period TEXT DEFAULT '',
+        role TEXT DEFAULT ''
+      );
+    `);
+    tablesEnsured = true;
+  } catch (e) {
+    console.error('Auto-migration error:', e.message);
+  }
+}
+
 // Resources that get a generic, auto-generated admin CRUD screen. Gallery
 // events also live here (title/year only) — their nested photos get their
 // own dedicated admin routes further down. Settings is a singleton and
@@ -140,6 +171,7 @@ function buildApp() {
   app.get('/api/portfolio', async (req, res, next) => {
     try {
       const sql = getSql();
+      await ensureTables(sql);
 
       // Fire all queries in parallel
       const [settingsRow, interests, langs, roles, areas,
@@ -449,6 +481,7 @@ function buildApp() {
       title: 'Core Info',
       items: [
         { key: 'settings', label: 'Site Settings', desc: 'Profile, socials, skills, personal info', icon: 'bi-gear-fill', color: '#6366f1', table: null },
+        { key: 'spotlights', label: 'Spotlight Highlights', desc: 'Hero slideshow highlight cards', icon: 'bi-stars', color: '#f59e0b', table: 'spotlights' },
         { key: 'spoken-languages', label: 'Spoken Languages', desc: 'Manage spoken languages', icon: 'bi-translate', color: '#8b5cf6', table: 'spoken_languages' }
       ]
     },
@@ -491,6 +524,7 @@ function buildApp() {
   app.get('/admin', async (req, res, next) => {
     try {
       const sql = getSql();
+      await ensureTables(sql);
       const counts = {};
       
       await Promise.all(
