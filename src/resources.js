@@ -233,6 +233,34 @@ const RESOURCES = {
     ],
     serialize: (row) => ({ topic: row.topic, desc: row.description }),
   },
+
+  spotlights: {
+    table: 'spotlights',
+    label: 'Spotlight Highlights',
+    fields: [
+      { key: 'badge', label: 'Badge Label (e.g. Top Publication, Latest AI Project)', type: 'text' },
+      {
+        key: 'badge_type', label: 'Badge Style / Color', type: 'select',
+        options: ['badge-pub', 'badge-proj', 'badge-xai'],
+      },
+      { key: 'title', label: 'Highlight Title', type: 'text' },
+      { key: 'description', label: 'Short Description', type: 'textarea' },
+      { key: 'tag', label: 'Tag (e.g. Journal Paper, Medical Image AI)', type: 'text' },
+      { key: 'link_url', label: 'Action Link URL (e.g. publications/index.html)', type: 'text' },
+      { key: 'link_label', label: 'Link Button Text (e.g. View Paper, Explore)', type: 'text' },
+    ],
+    serialize: (row) => ({
+      id: row.id,
+      badge: row.badge,
+      badgeType: row.badge_type,
+      title: row.title,
+      description: row.description,
+      tag: row.tag,
+      linkUrl: row.link_url,
+      linkLabel: row.link_label,
+      order: row.sort_order,
+    }),
+  },
 };
 
 function splitLines(text) {

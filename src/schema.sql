@@ -81,6 +81,18 @@ CREATE TABLE IF NOT EXISTS teaching_areas (
   description TEXT DEFAULT ''
 );
 
+CREATE TABLE IF NOT EXISTS spotlights (
+  id SERIAL PRIMARY KEY,
+  sort_order INTEGER DEFAULT 0,
+  badge TEXT DEFAULT 'Top Highlight',
+  badge_type TEXT DEFAULT 'badge-pub',
+  title TEXT DEFAULT '',
+  description TEXT DEFAULT '',
+  tag TEXT DEFAULT '',
+  link_url TEXT DEFAULT '',
+  link_label TEXT DEFAULT 'Explore'
+);
+
 CREATE TABLE IF NOT EXISTS education (
   id SERIAL PRIMARY KEY,
   sort_order INTEGER DEFAULT 0,

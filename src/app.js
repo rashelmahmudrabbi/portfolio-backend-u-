@@ -15,7 +15,7 @@ const { layout, renderForm, renderTable, esc, renderCvAdmin } = require('./views
 const ADMIN_RESOURCE_KEYS = [
   'education', 'experience', 'publications', 'projects', 'certifications',
   'awards', 'activities', 'courses', 'blog', 'references',
-  'research-interests', 'spoken-languages', 'teaching-roles', 'teaching-areas',
+  'research-interests', 'spoken-languages', 'teaching-roles', 'teaching-areas', 'spotlights',
 ];
 
 // Resources exposed on the public read-only API at /api/<key>. Gallery and
@@ -23,7 +23,7 @@ const ADMIN_RESOURCE_KEYS = [
 // nested data, not a flat table dump.
 const PUBLIC_API_KEYS = [
   'education', 'experience', 'publications', 'projects', 'certifications',
-  'awards', 'activities', 'courses', 'blog', 'references',
+  'awards', 'activities', 'courses', 'blog', 'references', 'spotlights',
 ];
 
 function buildApp() {
@@ -144,7 +144,7 @@ function buildApp() {
       // Fire all queries in parallel
       const [settingsRow, interests, langs, roles, areas,
              eduRows, expRows, pubRows, projRows, certRows,
-             awardRows, actRows, galleryEvents, galleryPhotos, refRows] = await Promise.all([
+             awardRows, actRows, galleryEvents, galleryPhotos, refRows, spotRows] = await Promise.all([
         sql`SELECT * FROM site_settings WHERE id = 1`,
         sql`SELECT * FROM research_interests ORDER BY sort_order ASC, id ASC`,
         sql`SELECT * FROM spoken_languages ORDER BY sort_order ASC, id ASC`,
@@ -160,6 +160,7 @@ function buildApp() {
         sql`SELECT * FROM gallery_events ORDER BY sort_order ASC, id ASC`,
         sql`SELECT * FROM gallery_photos ORDER BY sort_order ASC, id ASC`,
         sql`SELECT * FROM reference_list ORDER BY sort_order ASC, id ASC`,
+        sql`SELECT * FROM spotlights ORDER BY sort_order ASC, id ASC`,
       ]);
 
       const s = settingsRow[0] || {};
@@ -220,6 +221,7 @@ function buildApp() {
         certifications: certRows.map((r) => serializeRow('certifications', r)),
         awards: awardRows.map((r) => serializeRow('awards', r)),
         activities: actRows.map((r) => serializeRow('activities', r)),
+        spotlights: spotRows.map((r) => serializeRow('spotlights', r)),
         gallery: galleryEvents.map((e) => ({
           id: e.id, title: e.title, year: e.year, order: e.sort_order,
           photos: byEvent[e.id] || [],
