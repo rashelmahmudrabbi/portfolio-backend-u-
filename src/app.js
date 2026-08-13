@@ -53,6 +53,19 @@ async function ensureTables(sql) {
   } catch (e) {
     console.error('Auto-migration error courses:', e.message);
   }
+  try {
+    await sql(`
+      CREATE TABLE IF NOT EXISTS about_pills (
+        id SERIAL PRIMARY KEY,
+        sort_order INTEGER DEFAULT 0,
+        icon TEXT DEFAULT 'bi-cpu',
+        label TEXT DEFAULT '',
+        color_type TEXT DEFAULT 'primary'
+      );
+    `);
+  } catch (e) {
+    console.error('Auto-migration error about_pills:', e.message);
+  }
   tablesEnsured = true;
 }
 
@@ -63,7 +76,7 @@ async function ensureTables(sql) {
 const ADMIN_RESOURCE_KEYS = [
   'education', 'experience', 'publications', 'projects', 'certifications',
   'awards', 'activities', 'courses', 'blog', 'references',
-  'research-interests', 'spoken-languages', 'teaching-roles', 'teaching-areas', 'spotlights',
+  'research-interests', 'spoken-languages', 'teaching-roles', 'teaching-areas', 'spotlights', 'about-pills',
 ];
 
 // Resources exposed on the public read-only API at /api/<key>. Gallery and
@@ -71,7 +84,7 @@ const ADMIN_RESOURCE_KEYS = [
 // nested data, not a flat table dump.
 const PUBLIC_API_KEYS = [
   'education', 'experience', 'publications', 'projects', 'certifications',
-  'awards', 'activities', 'courses', 'blog', 'references', 'spotlights',
+  'awards', 'activities', 'courses', 'blog', 'references', 'spotlights', 'about-pills',
 ];
 
 function buildApp() {
@@ -193,7 +206,7 @@ function buildApp() {
       // Fire all queries in parallel
       const [settingsRow, interests, langs, roles, areas,
              eduRows, expRows, pubRows, projRows, certRows,
-             awardRows, actRows, galleryEvents, galleryPhotos, refRows, spotRows, courseRows] = await Promise.all([
+             awardRows, actRows, galleryEvents, galleryPhotos, refRows, spotRows, courseRows, pillRows] = await Promise.all([
         sql`SELECT * FROM site_settings WHERE id = 1`,
         sql`SELECT * FROM research_interests ORDER BY sort_order ASC, id ASC`,
         sql`SELECT * FROM spoken_languages ORDER BY sort_order ASC, id ASC`,
@@ -211,6 +224,7 @@ function buildApp() {
         sql`SELECT * FROM reference_list ORDER BY sort_order ASC, id ASC`,
         sql`SELECT * FROM spotlights ORDER BY sort_order ASC, id ASC`,
         sql`SELECT * FROM courses ORDER BY sort_order ASC, id ASC`,
+        sql`SELECT * FROM about_pills ORDER BY sort_order ASC, id ASC`,
       ]);
 
       const s = settingsRow[0] || {};
@@ -246,9 +260,13 @@ function buildApp() {
           about: {
             kicker: s.about_kicker || 'ABOUT ME',
             headline: s.about_headline || 'AI research with a practical mindset.',
-            pill1: s.about_pill_1 || 'AI & Computer Vision',
-            pill2: s.about_pill_2 || 'Medical Image Analysis',
             statusText: s.about_status_text || 'Open to research opportunities',
+            pills: pillRows && pillRows.length > 0 ? pillRows.map(p => ({
+              id: p.id,
+              label: p.label,
+              icon: p.icon || 'bi-cpu',
+              colorType: p.color_type || 'primary'
+            })) : [],
           },
           personalInfo: {
             fatherName: s.father_name || '',
@@ -505,6 +523,7 @@ function buildApp() {
       title: 'Core Info',
       items: [
         { key: 'settings', label: 'Site Settings', desc: 'Profile, socials, skills, personal info', icon: 'bi-gear-fill', color: '#6366f1', table: null },
+        { key: 'about-pills', label: 'About Meta Pills', desc: 'Custom metadata badges for About section', icon: 'bi-tags-fill', color: '#10b981', table: 'about_pills' },
         { key: 'spotlights', label: 'Spotlight Highlights', desc: 'Hero slideshow highlight cards', icon: 'bi-stars', color: '#f59e0b', table: 'spotlights' },
         { key: 'spoken-languages', label: 'Spoken Languages', desc: 'Manage spoken languages', icon: 'bi-translate', color: '#8b5cf6', table: 'spoken_languages' }
       ]
@@ -1033,12 +1052,10 @@ const SETTINGS_FIELDS = [
   { key: 'phone', label: 'Phone', type: 'text' },
   { key: 'location', label: 'Location', type: 'text' },
   { key: 'avatar', label: 'Avatar (path or URL)', type: 'text' },
-  { key: 'objective', label: 'About Me Bio / Narrative (Supports HTML)', type: 'textarea' },
+  { key: 'objective', label: 'About Me Bio / Narrative (Paragraphs below pills - separate paragraphs with empty line or use HTML)', type: 'textarea' },
   { key: 'about_kicker', label: 'About Section Kicker (Default: ABOUT ME)', type: 'text' },
   { key: 'about_headline', label: 'About Section Headline', type: 'text' },
-  { key: 'about_pill_1', label: 'About Meta Pill 1 (e.g. AI & Computer Vision)', type: 'text' },
-  { key: 'about_pill_2', label: 'About Meta Pill 2 (e.g. Medical Image Analysis)', type: 'text' },
-  { key: 'about_status_text', label: 'Research Status Badge Text', type: 'text' },
+  { key: 'about_status_text', label: 'Research Status Badge Text (Green pulse pill)', type: 'text' },
   { key: 'stat_publications', label: 'Stat: Publications', type: 'number' },
   { key: 'stat_projects', label: 'Stat: Projects', type: 'number' },
   { key: 'stat_awards', label: 'Stat: Awards', type: 'number' },

@@ -86,6 +86,14 @@ CREATE TABLE IF NOT EXISTS teaching_areas (
   description TEXT DEFAULT ''
 );
 
+CREATE TABLE IF NOT EXISTS about_pills (
+  id SERIAL PRIMARY KEY,
+  sort_order INTEGER DEFAULT 0,
+  icon TEXT DEFAULT 'bi-cpu',
+  label TEXT DEFAULT '',
+  color_type TEXT DEFAULT 'primary'
+);
+
 CREATE TABLE IF NOT EXISTS spotlights (
   id SERIAL PRIMARY KEY,
   sort_order INTEGER DEFAULT 0,

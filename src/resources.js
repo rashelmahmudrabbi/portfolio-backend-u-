@@ -234,6 +234,26 @@ const RESOURCES = {
     serialize: (row) => ({ topic: row.topic, desc: row.description }),
   },
 
+  'about-pills': {
+    table: 'about_pills',
+    label: 'About Meta Pills',
+    fields: [
+      { key: 'label', label: 'Pill Label (e.g. AI & Computer Vision, Medical Imaging, Rajshahi, Bangladesh)', type: 'text' },
+      { key: 'icon', label: 'Bootstrap Icon Class (e.g. bi-cpu, bi-heart-pulse-fill, bi-geo-alt-fill, bi-lightning-charge)', type: 'text' },
+      {
+        key: 'color_type', label: 'Icon / Accent Color', type: 'select',
+        options: ['primary', 'danger', 'success', 'warning', 'info', 'secondary'],
+      },
+    ],
+    serialize: (row) => ({
+      id: row.id,
+      label: row.label,
+      icon: row.icon,
+      colorType: row.color_type,
+      order: row.sort_order,
+    }),
+  },
+
   spotlights: {
     table: 'spotlights',
     label: 'Spotlight Highlights',

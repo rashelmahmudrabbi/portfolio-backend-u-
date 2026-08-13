@@ -396,6 +396,7 @@ ${authed ? `
     <div class="sidebar-category">Overview</div>
     <a href="/admin"><i class="bi bi-grid-fill"></i> Dashboard</a>
     <a href="/admin/spotlights"><i class="bi bi-stars"></i> Spotlight Highlights</a>
+    <a href="/admin/about-pills"><i class="bi bi-tags-fill"></i> About Meta Pills</a>
     <a href="/admin/settings"><i class="bi bi-gear-fill"></i> Site Settings</a>
     <a href="/admin/cv"><i class="bi bi-file-earmark-person-fill"></i> Manage CV</a>
     
