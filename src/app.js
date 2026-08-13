@@ -193,10 +193,8 @@ function buildApp() {
           },
           spokenLanguages: langs.map((l) => ({ name: l.name, level: l.level })),
           personalInfo: {
-            fatherName: s.father_name || '', motherName: s.mother_name || '',
-            dob: s.dob || '', religion: s.religion || '', nid: s.nid || '',
-            maritalStatus: s.marital_status || '', bloodGroup: s.blood_group || '',
-            nationality: s.nationality || '', address: s.address || '',
+            nationality: s.nationality || '',
+            address: s.location || 'Bangladesh',
           },
           teaching: {
             philosophy: s.teaching_philosophy || '',
@@ -268,15 +266,8 @@ function buildApp() {
         },
         spokenLanguages: langs.map((l) => ({ name: l.name, level: l.level })),
         personalInfo: {
-          fatherName: s.father_name || '',
-          motherName: s.mother_name || '',
-          dob: s.dob || '',
-          religion: s.religion || '',
-          nid: s.nid || '',
-          maritalStatus: s.marital_status || '',
-          bloodGroup: s.blood_group || '',
           nationality: s.nationality || '',
-          address: s.address || '',
+          address: s.location || 'Bangladesh',
         },
         teaching: {
           philosophy: s.teaching_philosophy || '',
