@@ -453,24 +453,37 @@ function buildApp() {
     }));
   });
 
-  app.post('/admin/login', async (req, res) => {
-    const { username, password } = req.body;
-    const sql = getSql();
-    
-    // Seed admin_users table if empty
-    const adminCount = await sql`SELECT count(*) FROM admin_users`;
-    if (adminCount[0].count === '0') {
-      const expectedUser = process.env.ADMIN_USERNAME || 'admin';
-      const expectedPass = process.env.ADMIN_PASSWORD || 'password';
-      const hash = auth.hashPassword(expectedPass);
-      await sql`INSERT INTO admin_users (id, username, password_hash) VALUES (1, ${expectedUser}, ${hash})`;
-    }
+  app.post('/admin/login', async (req, res, next) => {
+    try {
+      const { username, password } = req.body;
+      const sql = getSql();
+      await ensureTables(sql);
+      
+      // Ensure admin_users table exists
+      await sql(`CREATE TABLE IF NOT EXISTS admin_users (
+        id SERIAL PRIMARY KEY,
+        username TEXT UNIQUE NOT NULL,
+        password_hash TEXT NOT NULL
+      )`);
 
-    if (await auth.checkCredentials(sql, username, password)) {
-      res.setHeader('Set-Cookie', auth.createSessionCookie());
-      return res.redirect('/admin');
+      // Seed admin_users table if empty or if user matches env
+      const adminCount = await sql`SELECT count(*) FROM admin_users`;
+      if (adminCount[0].count === '0') {
+        const expectedUser = process.env.ADMIN_USERNAME || 'admin';
+        const expectedPass = process.env.ADMIN_PASSWORD || 'password';
+        const hash = auth.hashPassword(expectedPass);
+        await sql`INSERT INTO admin_users (id, username, password_hash) VALUES (1, ${expectedUser}, ${hash})`;
+      }
+
+      if (await auth.checkCredentials(sql, username, password)) {
+        res.setHeader('Set-Cookie', auth.createSessionCookie());
+        return res.redirect('/admin');
+      }
+      res.redirect('/admin/login?error=1');
+    } catch (err) {
+      console.error('Login error:', err);
+      res.redirect('/admin/login?error=1');
     }
-    res.redirect('/admin/login?error=1');
   });
 
   app.post('/admin/logout', (req, res) => {
