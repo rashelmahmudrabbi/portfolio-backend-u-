@@ -575,6 +575,7 @@ function buildApp() {
     app.get(`/admin/${key}`, async (req, res, next) => {
       try {
         const sql = getSql();
+        await ensureTables(sql);
         const rows = await sql(`SELECT * FROM ${resource.table} ORDER BY sort_order ASC, id ASC`);
         res.send(layout({
           title: resource.label, authed: true,
