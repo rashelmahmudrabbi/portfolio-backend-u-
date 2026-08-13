@@ -8,19 +8,43 @@ function esc(value) {
 }
 
 const STYLE = `
-  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Crimson+Pro:ital,wght@0,400;0,600;0,700;1,400&display=swap');
   
   :root {
-    --bg: #fafafa;
-    --card-bg: #ffffff;
-    --border: #eaeaea;
-    --text-main: #111111;
-    --text-muted: #666666;
-    --primary: #000000;
-    --primary-hover: #333333;
-    --danger: #e00;
-    --danger-hover: #c00;
-    --font: 'Inter', system-ui, -apple-system, sans-serif;
+    --bg: #F7F9FC;
+    --bg-alt: #EEF3F8;
+    --card-bg: #FFFFFF;
+    --surface-2: #F3F6FA;
+    --border: rgba(15, 23, 42, 0.12);
+    --text-main: #0F172A;
+    --text-muted: #475569;
+    --text-faint: #7C8A9A;
+    --primary: #2F6FED;
+    --primary-hover: #1A54D0;
+    --primary-tint: #E7F0FF;
+    --gold: #2F6FED;
+    --gold-soft: #6B9AF5;
+    --danger: #EF4444;
+    --danger-hover: #DC2626;
+    --success: #10B981;
+    --font: 'DM Sans', system-ui, -apple-system, sans-serif;
+    --shadow: 0 12px 32px rgba(11, 31, 58, 0.06);
+    --radius: 12px;
+  }
+  
+  [data-theme="dark"] {
+    --bg: #151C28;
+    --bg-alt: #1B2534;
+    --card-bg: #202C3D;
+    --surface-2: #263449;
+    --border: rgba(255, 255, 255, 0.12);
+    --text-main: #F1F5F9;
+    --text-muted: #C0CBD8;
+    --text-faint: #8E9CAE;
+    --primary: #2F6FED;
+    --primary-hover: #4B88FF;
+    --primary-tint: rgba(47, 111, 237, 0.15);
+    --shadow: 0 16px 40px rgba(0, 0, 0, 0.4);
   }
   
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -31,129 +55,181 @@ const STYLE = `
     color: var(--text-main);
     min-height: 100vh;
     line-height: 1.5;
+    transition: background 0.3s ease, color 0.3s ease;
   }
   
-  /* Topbar Vercel-style */
+  /* Topbar Frosted Header */
   header.topbar { 
     background: var(--card-bg);
     border-bottom: 1px solid var(--border);
     padding: 0 32px; 
-    height: 64px;
+    height: 68px;
     display: flex;
     align-items: center; 
     justify-content: space-between;
     position: sticky;
     top: 0;
     z-index: 100;
+    backdrop-filter: blur(12px);
+    transition: all 0.3s ease;
   }
-  header.topbar > a { color: var(--text-main); text-decoration: none; font-weight: 600; font-size: 16px; display: flex; align-items: center; gap: 10px;}
-  header.topbar > a::before {
-     content: ''; display: inline-block; width: 20px; height: 20px; background: var(--text-main); border-radius: 4px;
+  .brand-logo {
+    color: var(--text-main);
+    text-decoration: none;
+    font-weight: 700;
+    font-size: 1.05rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
   }
-  header.topbar nav { display: flex; align-items: center; gap: 24px; }
+  .brand-mark {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    background: #0B1F3A;
+    border: 2px solid var(--gold);
+    color: #fff;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 14px;
+    font-family: 'Crimson Pro', serif;
+  }
+  [data-theme="dark"] .brand-mark {
+    background: #0B1F3A;
+    border-color: #78A9FF;
+    color: #78A9FF;
+  }
+  
+  header.topbar nav { display: flex; align-items: center; gap: 20px; }
   header.topbar nav a { 
     color: var(--text-muted); 
-    font-weight: 500; 
+    font-weight: 600; 
     font-size: 14px; 
     text-decoration: none;
     transition: color 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 6px;
   }
-  header.topbar nav a:hover { color: var(--text-main); }
+  header.topbar nav a:hover { color: var(--primary); }
   
-  main { max-width: 1040px; margin: 48px auto; padding: 0 24px; animation: slideUpFade 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+  /* Theme Toggle Button */
+  .theme-toggle-btn {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    color: var(--text-main);
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 16px;
+    transition: all 0.2s ease;
+  }
+  .theme-toggle-btn:hover {
+    background: var(--primary-tint);
+    border-color: var(--primary);
+    color: var(--primary);
+  }
   
-  h1 { font-size: 32px; margin-bottom: 12px; font-weight: 700; letter-spacing: -0.04em; }
-  h2 { font-size: 20px; margin-bottom: 24px; font-weight: 600; letter-spacing: -0.02em; }
+  main { max-width: 1100px; margin: 40px auto; padding: 0 24px; animation: slideUpFade 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+  
+  h1 { font-size: 2.2rem; margin-bottom: 8px; font-weight: 700; letter-spacing: -0.03em; color: var(--text-main); }
+  h2 { font-size: 1.3rem; margin-bottom: 20px; font-weight: 700; letter-spacing: -0.02em; color: var(--text-main); }
   
   /* Clean Cards */
   .card { 
     background: var(--card-bg);
     border: 1px solid var(--border); 
-    border-radius: 8px; 
-    padding: 32px; 
-    margin-bottom: 32px; 
-    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-    transition: box-shadow 0.2s ease, transform 0.2s ease;
+    border-radius: var(--radius); 
+    padding: 28px 32px; 
+    margin-bottom: 28px; 
+    box-shadow: var(--shadow);
+    transition: box-shadow 0.25s ease, transform 0.25s ease, border-color 0.25s ease;
   }
   .card:hover {
-    box-shadow: 0 8px 24px rgba(0,0,0,0.08);
-    transform: translateY(-2px);
+    box-shadow: 0 14px 36px rgba(0,0,0,0.1);
   }
   
   /* Tables */
   table { width: 100%; border-collapse: separate; border-spacing: 0; }
-  th, td { text-align: left; padding: 16px 12px; border-bottom: 1px solid var(--border); font-size: 14px; vertical-align: middle; }
-  th { color: var(--text-muted); font-weight: 500; font-size: 13px; text-transform: capitalize; border-bottom-width: 2px; }
-  tbody tr { transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1); }
-  tbody tr:hover { background: #fdfdfd; transform: translateX(4px); box-shadow: -4px 0 0 var(--text-main); }
+  th, td { text-align: left; padding: 14px 14px; border-bottom: 1px solid var(--border); font-size: 14px; vertical-align: middle; }
+  th { color: var(--text-faint); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: 0.8px; border-bottom-width: 2px; }
+  tbody tr { transition: all 0.2s ease; }
+  tbody tr:hover { background: var(--surface-2); }
   
   /* Buttons */
   a.btn, button.btn { 
-    display: inline-flex; align-items: center; justify-content: center;
-    background: var(--primary); color: #fff; border: 1px solid var(--primary);
-    padding: 8px 16px; border-radius: 6px; text-decoration: none; 
-    font-size: 14px; font-weight: 500; cursor: pointer;
-    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    background: var(--primary); color: #fff !important; border: 1px solid var(--primary);
+    padding: 8px 18px; border-radius: 8px; text-decoration: none; 
+    font-size: 14px; font-weight: 600; cursor: pointer;
+    transition: all 0.2s ease;
   }
-  a.btn:hover, button.btn:hover { background: var(--primary-hover); border-color: var(--primary-hover); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
-  a.btn:active, button.btn:active { transform: scale(0.97); }
+  a.btn:hover, button.btn:hover { background: var(--primary-hover); border-color: var(--primary-hover); transform: translateY(-1px); box-shadow: 0 4px 14px rgba(47,111,237,0.3); }
+  a.btn:active, button.btn:active { transform: scale(0.98); }
   
-  a.btn.secondary, button.btn.secondary { background: #fff; color: var(--text-main); border: 1px solid var(--border); }
-  a.btn.secondary:hover, button.btn.secondary:hover { background: #f9fafb; border-color: var(--text-main); color: var(--text-main); }
+  a.btn.secondary, button.btn.secondary { background: var(--card-bg); color: var(--text-main) !important; border: 1px solid var(--border); }
+  a.btn.secondary:hover, button.btn.secondary:hover { background: var(--surface-2); border-color: var(--text-main); color: var(--text-main) !important; }
   
-  a.btn.danger, button.btn.danger { background: #fff; color: var(--danger); border: 1px solid var(--border); }
-  a.btn.danger:hover, button.btn.danger:hover { background: var(--danger); border-color: var(--danger); color: #fff; box-shadow: 0 4px 12px rgba(238,0,0,0.2); }
+  a.btn.danger, button.btn.danger { background: var(--card-bg); color: var(--danger) !important; border: 1px solid var(--border); }
+  a.btn.danger:hover, button.btn.danger:hover { background: var(--danger); border-color: var(--danger); color: #fff !important; box-shadow: 0 4px 12px rgba(239,68,68,0.25); }
   
   /* Links */
-  a.link { color: #0070f3; text-decoration: none; font-size: 14px; margin-right: 16px; font-weight: 500; transition: color 0.2s; }
-  a.link:hover { text-decoration: underline; }
-  button.link { background: none; border: none; padding: 0; cursor: pointer; color: var(--danger); font-size: 14px; font-weight: 500; }
+  a.link { color: var(--primary); text-decoration: none; font-size: 14px; margin-right: 14px; font-weight: 600; transition: color 0.2s; }
+  a.link:hover { text-decoration: underline; color: var(--primary-hover); }
+  button.link { background: none; border: none; padding: 0; cursor: pointer; color: var(--danger); font-size: 14px; font-weight: 600; }
   button.link:hover { text-decoration: underline; color: var(--danger-hover); }
   
   /* Grid Links (Dashboard) */
   .grid-links { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
   .grid-links a { 
     display: flex; flex-direction: column; justify-content: center;
-    background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px;
-    padding: 20px 24px; text-decoration: none; color: var(--text-main); font-weight: 600; font-size: 16px;
-    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-    box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+    background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 22px 24px; text-decoration: none; color: var(--text-main); font-weight: 600; font-size: 16px;
+    transition: all 0.25s ease;
+    box-shadow: var(--shadow);
   }
   .grid-links a:hover { 
-    border-color: var(--text-main); 
-    box-shadow: 0 8px 24px rgba(0,0,0,0.08); 
-    transform: translateY(-4px);
+    border-color: var(--primary); 
+    box-shadow: 0 12px 30px rgba(47,111,237,0.12); 
+    transform: translateY(-3px);
   }
-  .grid-links a span { display: block; font-weight: 400; color: var(--text-muted); font-size: 14px; margin-top: 8px; }
+  .grid-links a span { display: block; font-weight: 400; color: var(--text-muted); font-size: 13.5px; margin-top: 6px; }
   
   /* Forms */
-  label { display: block; font-weight: 500; font-size: 14px; margin: 24px 0 8px; color: var(--text-main); }
+  label { display: block; font-weight: 600; font-size: 14px; margin: 20px 0 8px; color: var(--text-main); }
   input[type=text], input[type=number], input[type=password], textarea, select {
-    width: 100%; padding: 10px 12px; background: #fff; border: 1px solid var(--border); 
-    border-radius: 6px; font-size: 14px; font-family: inherit; color: var(--text-main);
+    width: 100%; padding: 10px 14px; background: var(--card-bg); border: 1px solid var(--border); 
+    border-radius: 8px; font-size: 14px; font-family: inherit; color: var(--text-main);
     transition: border 0.15s ease, box-shadow 0.15s ease;
   }
-  input:focus, textarea:focus, select:focus { outline: none; border-color: #0070f3; box-shadow: 0 0 0 1px #0070f3; }
+  input:focus, textarea:focus, select:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-tint); }
   textarea { min-height: 140px; resize: vertical; line-height: 1.5; }
   
-  .checkbox-row { display: flex; align-items: center; gap: 10px; margin-top: 24px; }
-  .checkbox-row input { width: 16px; height: 16px; cursor: pointer; }
+  .checkbox-row { display: flex; align-items: center; gap: 10px; margin-top: 20px; }
+  .checkbox-row input { width: 18px; height: 18px; cursor: pointer; accent-color: var(--primary); }
   .checkbox-row label { margin: 0; cursor: pointer; color: var(--text-main); font-size: 14px; }
   
-  .actions { margin-top: 32px; display: flex; gap: 16px; padding-top: 24px; border-top: 1px solid var(--border); }
+  .actions { margin-top: 28px; display: flex; gap: 14px; padding-top: 20px; border-top: 1px solid var(--border); }
   
   /* Alerts */
   .flash { 
-    background: #0070f3; color: #fff;
-    padding: 12px 16px; border-radius: 6px; margin-bottom: 24px; font-size: 14px; font-weight: 500;
-    display: flex; align-items: center; animation: slideDown 0.3s ease-out;
+    background: var(--primary); color: #fff;
+    padding: 14px 18px; border-radius: 8px; margin-bottom: 24px; font-size: 14px; font-weight: 600;
+    display: flex; align-items: center; gap: 8px; animation: slideDown 0.3s ease-out;
+    box-shadow: 0 4px 16px rgba(47,111,237,0.25);
   }
   
   .muted { color: var(--text-muted); font-size: 14px; }
   form.inline { display: inline; }
   
   @keyframes slideUpFade { 
-    from { opacity: 0; transform: translateY(20px); } 
+    from { opacity: 0; transform: translateY(16px); } 
     to { opacity: 1; transform: translateY(0); } 
   }
   @keyframes slideDown { 
@@ -171,16 +247,58 @@ function layout({ title, authed, body, flash }) {
 <title>${esc(title)} · Portfolio Admin</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 <style>${STYLE}</style>
+<script>
+  (function() {
+    const saved = localStorage.getItem('theme');
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    if (saved === 'dark' || (!saved && prefersDark)) {
+      document.documentElement.setAttribute('data-theme', 'dark');
+    }
+  })();
+  function toggleAdminTheme() {
+    const current = document.documentElement.getAttribute('data-theme');
+    const next = current === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', next);
+    localStorage.setItem('theme', next);
+    const icon = document.getElementById('adminThemeIcon');
+    if (icon) icon.className = next === 'dark' ? 'bi bi-sun-fill' : 'bi bi-moon-stars-fill';
+  }
+</script>
 </head>
 <body>
 <header class="topbar">
-  <a href="/admin">Portfolio Admin</a>
-  ${authed ? `<nav><a href="/admin">Dashboard</a><a href="/admin/settings">Settings</a><a href="/admin/gallery">Gallery</a><a href="/admin/cv">Manage CV</a><a href="/admin/change-password">Change Password</a><a href="https://rashelmahmudrabbi.github.io/" target="_blank" style="color:#e8b84b;">↗ Preview Site</a><form class="inline" method="post" action="/admin/logout"><button class="btn secondary" style="margin-left:16px;">Log out</button></form></nav>` : ''}
+  <a href="/admin" class="brand-logo">
+    <span class="brand-mark">R.</span>
+    <span>Rashel Mahmud Rabbi <span style="font-size:12px; font-weight:500; opacity:0.6; margin-left:4px;">· Admin</span></span>
+  </a>
+  <div style="display:flex; align-items:center; gap:16px;">
+    ${authed ? `<nav>
+      <a href="/admin"><i class="bi bi-grid-fill"></i> Dashboard</a>
+      <a href="/admin/settings"><i class="bi bi-gear-fill"></i> Settings</a>
+      <a href="/admin/gallery"><i class="bi bi-images"></i> Gallery</a>
+      <a href="/admin/cv"><i class="bi bi-file-earmark-person-fill"></i> Manage CV</a>
+      <a href="/admin/change-password"><i class="bi bi-key-fill"></i> Password</a>
+      <a href="https://rashelmahmudrabbi.github.io/" target="_blank" style="color:var(--gold-soft);"><i class="bi bi-box-arrow-up-right"></i> Live Site</a>
+      <form class="inline" method="post" action="/admin/logout">
+        <button class="btn secondary" style="padding:6px 12px; font-size:13px;"><i class="bi bi-box-arrow-right"></i> Log out</button>
+      </form>
+    </nav>` : ''}
+    <button class="theme-toggle-btn" onclick="toggleAdminTheme()" title="Toggle Dark/Light Mode">
+      <i id="adminThemeIcon" class="bi bi-moon-stars-fill"></i>
+    </button>
+  </div>
 </header>
 <main>
-  ${flash ? `<div class="flash">${esc(flash)}</div>` : ''}
+  ${flash ? `<div class="flash"><i class="bi bi-info-circle-fill"></i> ${esc(flash)}</div>` : ''}
   ${body}
 </main>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    const icon = document.getElementById('adminThemeIcon');
+    if (icon) icon.className = isDark ? 'bi bi-sun-fill' : 'bi bi-moon-stars-fill';
+  });
+</script>
 </body>
 </html>`;
 }
