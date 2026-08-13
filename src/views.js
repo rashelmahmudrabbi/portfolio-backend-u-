@@ -267,9 +267,8 @@ function layout({ title, authed, body, flash }) {
 </head>
 <body>
 <header class="topbar">
-  <a href="/admin" class="brand-logo">
-    <span class="brand-mark">R.</span>
-    <span>Rashel Mahmud Rabbi <span style="font-size:12px; font-weight:500; opacity:0.6; margin-left:4px;">· Admin</span></span>
+  <a href="/admin" class="brand-logo" style="color:var(--primary); font-weight:700; font-size:1.15rem; letter-spacing:-0.01em;">
+    Rashel Mahmud Rabbi
   </a>
   <div style="display:flex; align-items:center; gap:16px;">
     ${authed ? `<nav>
