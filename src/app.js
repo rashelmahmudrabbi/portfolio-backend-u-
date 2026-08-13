@@ -658,16 +658,21 @@ function buildApp() {
       }));
     });
 
-    app.post(`/admin/${key}/new`, async (req, res, next) => {
+    app.post(`/admin/${key}/new`, upload.single('image_file'), async (req, res, next) => {
       try {
         const sql = getSql();
         const values = extractValues(resource.fields, req.body);
+        if (req.file) {
+          const b64 = req.file.buffer.toString('base64');
+          values.image = `data:${req.file.mimetype};base64,${b64}`;
+        }
+        const dbFields = resource.fields.filter(f => f.key !== 'image_file');
         const order = Number(req.body.order) || 0;
-        const cols = ['sort_order', ...resource.fields.map((f) => f.key)];
+        const cols = ['sort_order', ...dbFields.map((f) => f.key)];
         const placeholders = cols.map((_, i) => `$${i + 1}`).join(', ');
         await sql(
           `INSERT INTO ${resource.table} (${cols.join(', ')}) VALUES (${placeholders})`,
-          [order, ...resource.fields.map((f) => values[f.key])]
+          [order, ...dbFields.map((f) => values[f.key])]
         );
         res.redirect(`/admin/${key}`);
       } catch (err) { next(err); }
@@ -687,15 +692,24 @@ function buildApp() {
       } catch (err) { next(err); }
     });
 
-    app.post(`/admin/${key}/:id/edit`, async (req, res, next) => {
+    app.post(`/admin/${key}/:id/edit`, upload.single('image_file'), async (req, res, next) => {
       try {
         const sql = getSql();
         const values = extractValues(resource.fields, req.body);
+        if (req.file) {
+          const b64 = req.file.buffer.toString('base64');
+          values.image = `data:${req.file.mimetype};base64,${b64}`;
+        } else if (!values.image) {
+          // If no new file uploaded and image url is empty, keep existing image
+          const [existing] = await sql(`SELECT image FROM ${resource.table} WHERE id = $1`, [req.params.id]);
+          if (existing && existing.image) values.image = existing.image;
+        }
+        const dbFields = resource.fields.filter(f => f.key !== 'image_file');
         const order = Number(req.body.order) || 0;
-        const setSql = resource.fields.map((f, i) => `${f.key} = $${i + 2}`).join(', ');
+        const setSql = dbFields.map((f, i) => `${f.key} = $${i + 2}`).join(', ');
         await sql(
-          `UPDATE ${resource.table} SET sort_order = $1, ${setSql} WHERE id = $${resource.fields.length + 2}`,
-          [order, ...resource.fields.map((f) => values[f.key]), req.params.id]
+          `UPDATE ${resource.table} SET sort_order = $1, ${setSql} WHERE id = $${dbFields.length + 2}`,
+          [order, ...dbFields.map((f) => values[f.key]), req.params.id]
         );
         res.redirect(`/admin/${key}`);
       } catch (err) { next(err); }
