@@ -24,6 +24,12 @@ async function ensureTables(sql) {
         link_url TEXT DEFAULT '',
         link_label TEXT DEFAULT 'Explore'
       );
+    `);
+  } catch (e) {
+    console.error('Auto-migration error spotlights:', e.message);
+  }
+  try {
+    await sql(`
       CREATE TABLE IF NOT EXISTS courses (
         id SERIAL PRIMARY KEY,
         sort_order INTEGER DEFAULT 0,
@@ -33,10 +39,10 @@ async function ensureTables(sql) {
         role TEXT DEFAULT ''
       );
     `);
-    tablesEnsured = true;
   } catch (e) {
-    console.error('Auto-migration error:', e.message);
+    console.error('Auto-migration error courses:', e.message);
   }
+  tablesEnsured = true;
 }
 
 // Resources that get a generic, auto-generated admin CRUD screen. Gallery
@@ -530,8 +536,12 @@ function buildApp() {
       await Promise.all(
         DASHBOARD_GROUPS.flatMap(g => g.items).map(async (item) => {
           if (item.table) {
-            const result = await sql(`SELECT count(*) as count FROM ${item.table}`);
-            counts[item.key] = result[0].count;
+            try {
+              const result = await sql(`SELECT count(*) as count FROM ${item.table}`);
+              counts[item.key] = result && result[0] ? result[0].count : 0;
+            } catch (e) {
+              counts[item.key] = 0;
+            }
           }
         })
       );
@@ -576,7 +586,23 @@ function buildApp() {
       try {
         const sql = getSql();
         await ensureTables(sql);
-        const rows = await sql(`SELECT * FROM ${resource.table} ORDER BY sort_order ASC, id ASC`);
+        let rows = [];
+        try {
+          rows = await sql(`SELECT * FROM ${resource.table} ORDER BY sort_order ASC, id ASC`);
+        } catch (queryErr) {
+          if (queryErr.message && queryErr.message.includes('does not exist')) {
+            // Force table creation and retry
+            tablesEnsured = false;
+            await ensureTables(sql);
+            try {
+              rows = await sql(`SELECT * FROM ${resource.table} ORDER BY sort_order ASC, id ASC`);
+            } catch (retryErr) {
+              rows = [];
+            }
+          } else {
+            throw queryErr;
+          }
+        }
         res.send(layout({
           title: resource.label, authed: true,
           body: `<h1>${esc(resource.label)}</h1>` + renderTable({ resourceKey: key, label: resource.label, fields: resource.fields, rows }),
