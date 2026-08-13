@@ -14,11 +14,12 @@ const STYLE = `
     --bg: #F8FAFC;
     --bg-alt: #F1F5F9;
     --card-bg: #FFFFFF;
-    --sidebar-bg: #0B1F3A;
-    --sidebar-hover: #152E54;
+    --sidebar-bg: #FFFFFF;
+    --sidebar-border: rgba(15, 23, 42, 0.08);
+    --sidebar-hover: #F1F5F9;
     --sidebar-active: #2F6FED;
-    --sidebar-text: #E2E8F0;
-    --sidebar-text-muted: #94A3B8;
+    --sidebar-text: #334155;
+    --sidebar-text-muted: #64748B;
     --surface-2: #F1F5F9;
     --border: rgba(15, 23, 42, 0.08);
     --text-main: #0F172A;
@@ -42,6 +43,7 @@ const STYLE = `
     --bg-alt: #131E30;
     --card-bg: #1A263A;
     --sidebar-bg: #101927;
+    --sidebar-border: rgba(255, 255, 255, 0.08);
     --sidebar-hover: #1E2D44;
     --sidebar-active: #2F6FED;
     --sidebar-text: #F1F5F9;
@@ -82,20 +84,20 @@ const STYLE = `
     left: 0;
     bottom: 0;
     z-index: 200;
-    border-right: 1px solid rgba(255,255,255,0.06);
-    transition: transform 0.3s ease;
+    border-right: 1px solid var(--sidebar-border);
+    transition: background 0.3s ease, border-color 0.3s ease, transform 0.3s ease;
   }
   
   .sidebar-header {
     padding: 24px 20px;
-    border-bottom: 1px solid rgba(255,255,255,0.08);
+    border-bottom: 1px solid var(--sidebar-border);
     display: flex;
     align-items: center;
     justify-content: space-between;
   }
   
   .sidebar-brand {
-    color: #fff;
+    color: var(--text-main);
     text-decoration: none;
     font-size: 1.05rem;
     font-weight: 700;
@@ -103,8 +105,9 @@ const STYLE = `
     display: flex;
     align-items: center;
     gap: 8px;
+    transition: color 0.2s ease;
   }
-  .sidebar-brand:hover { color: #78A9FF; }
+  .sidebar-brand:hover { color: var(--primary); }
   
   .sidebar-nav {
     flex: 1;
@@ -146,23 +149,23 @@ const STYLE = `
   }
   .sidebar-nav a:hover {
     background: var(--sidebar-hover);
-    color: #fff;
+    color: var(--primary);
   }
   .sidebar-nav a:hover i {
-    color: #78A9FF;
+    color: var(--primary);
   }
   .sidebar-nav a.active {
     background: var(--sidebar-active);
-    color: #fff;
+    color: #fff !important;
     font-weight: 600;
   }
   .sidebar-nav a.active i {
-    color: #fff;
+    color: #fff !important;
   }
   
   .sidebar-footer {
     padding: 16px;
-    border-top: 1px solid rgba(255,255,255,0.08);
+    border-top: 1px solid var(--sidebar-border);
     display: flex;
     flex-direction: column;
     gap: 8px;
