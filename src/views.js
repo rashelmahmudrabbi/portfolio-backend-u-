@@ -410,11 +410,15 @@ ${authed ? `
     <a href="/admin/gallery"><i class="bi bi-images"></i> Gallery</a>
     <a href="/admin/blog"><i class="bi bi-pencil-square"></i> Blog Posts</a>
     
-    <div class="sidebar-category">Recognition & Teaching</div>
+    <div class="sidebar-category">Recognition & Skills</div>
     <a href="/admin/awards"><i class="bi bi-trophy-fill"></i> Awards</a>
     <a href="/admin/certifications"><i class="bi bi-patch-check-fill"></i> Certifications</a>
     <a href="/admin/activities"><i class="bi bi-activity"></i> Activities</a>
-    <a href="/admin/teaching-roles"><i class="bi bi-person-badge"></i> Teaching</a>
+    <a href="/admin/spoken-languages"><i class="bi bi-translate"></i> Spoken Languages</a>
+
+    <div class="sidebar-category">Teaching</div>
+    <a href="/admin/teaching-roles"><i class="bi bi-person-badge"></i> Teaching Roles</a>
+    <a href="/admin/teaching-areas"><i class="bi bi-book-half"></i> Teaching Areas</a>
   </div>
   
   <div class="sidebar-footer">
