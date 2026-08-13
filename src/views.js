@@ -569,6 +569,23 @@ function truncate(v, n) {
   return s.length > n ? s.slice(0, n) + '…' : s;
 }
 
+function renderCvAdmin(currentUrl) {
+  return `<div class="card">
+    <h2>Manage CV</h2>
+    <p class="muted" style="margin-bottom: 24px;">Upload your CV as a PDF file. This will be securely stored and served to visitors when they click "Download CV" on the website.
+    <br><br>
+    Currently active CV Link/Data: <br><code style="word-break: break-all; background: #eee; padding: 4px; border-radius: 4px; display: inline-block; margin-top: 4px;">${esc(currentUrl ? truncate(currentUrl, 100) : 'None')}</code>
+    </p>
+    <form method="post" action="/admin/cv" enctype="multipart/form-data">
+      <div style="margin-bottom: 16px;">
+        <label style="display:block; font-weight: 500; margin-bottom: 8px;">Upload New CV (PDF)</label>
+        <input type="file" name="cv_file" accept="application/pdf" style="display:block; padding: 8px; border: 1px solid var(--border); border-radius: 6px; width: 100%;" required />
+      </div>
+      <button class="btn" type="submit">Upload CV</button>
+    </form>
+  </div>`;
+}
+
 function renderAboutAdmin({ settings = {}, pills = [] }) {
   const pillRows = pills.map(p => `
     <tr>
