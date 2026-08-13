@@ -11,14 +11,19 @@ const STYLE = `
   @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Crimson+Pro:ital,wght@0,400;0,600;0,700;1,400&display=swap');
   
   :root {
-    --bg: #F7F9FC;
-    --bg-alt: #EEF3F8;
+    --bg: #F8FAFC;
+    --bg-alt: #F1F5F9;
     --card-bg: #FFFFFF;
-    --surface-2: #F3F6FA;
-    --border: rgba(15, 23, 42, 0.12);
+    --sidebar-bg: #0B1F3A;
+    --sidebar-hover: #152E54;
+    --sidebar-active: #2F6FED;
+    --sidebar-text: #E2E8F0;
+    --sidebar-text-muted: #94A3B8;
+    --surface-2: #F1F5F9;
+    --border: rgba(15, 23, 42, 0.08);
     --text-main: #0F172A;
     --text-muted: #475569;
-    --text-faint: #7C8A9A;
+    --text-faint: #64748B;
     --primary: #2F6FED;
     --primary-hover: #1A54D0;
     --primary-tint: #E7F0FF;
@@ -28,23 +33,28 @@ const STYLE = `
     --danger-hover: #DC2626;
     --success: #10B981;
     --font: 'DM Sans', system-ui, -apple-system, sans-serif;
-    --shadow: 0 12px 32px rgba(11, 31, 58, 0.06);
+    --shadow: 0 4px 20px rgba(11, 31, 58, 0.05);
     --radius: 12px;
   }
   
   [data-theme="dark"] {
-    --bg: #151C28;
-    --bg-alt: #1B2534;
-    --card-bg: #202C3D;
-    --surface-2: #263449;
-    --border: rgba(255, 255, 255, 0.12);
+    --bg: #0D1522;
+    --bg-alt: #131E30;
+    --card-bg: #1A263A;
+    --sidebar-bg: #101927;
+    --sidebar-hover: #1E2D44;
+    --sidebar-active: #2F6FED;
+    --sidebar-text: #F1F5F9;
+    --sidebar-text-muted: #8E9CAE;
+    --surface-2: #22324B;
+    --border: rgba(255, 255, 255, 0.08);
     --text-main: #F1F5F9;
     --text-muted: #C0CBD8;
     --text-faint: #8E9CAE;
     --primary: #2F6FED;
     --primary-hover: #4B88FF;
     --primary-tint: rgba(47, 111, 237, 0.15);
-    --shadow: 0 16px 40px rgba(0, 0, 0, 0.4);
+    --shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
   }
   
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -56,78 +66,160 @@ const STYLE = `
     min-height: 100vh;
     line-height: 1.5;
     transition: background 0.3s ease, color 0.3s ease;
+    display: flex;
   }
   
-  /* Topbar Frosted Header */
-  header.topbar { 
+  /* SIDEBAR */
+  aside.admin-sidebar {
+    width: 260px;
+    background: var(--sidebar-bg);
+    color: var(--sidebar-text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    z-index: 200;
+    border-right: 1px solid rgba(255,255,255,0.06);
+    transition: transform 0.3s ease;
+  }
+  
+  .sidebar-header {
+    padding: 24px 20px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  
+  .sidebar-brand {
+    color: #fff;
+    text-decoration: none;
+    font-size: 1.05rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .sidebar-brand:hover { color: #78A9FF; }
+  
+  .sidebar-nav {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  
+  .sidebar-category {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--sidebar-text-muted);
+    padding: 12px 12px 6px;
+    margin-top: 6px;
+  }
+  
+  .sidebar-nav a {
+    color: var(--sidebar-text);
+    text-decoration: none;
+    font-size: 13.5px;
+    font-weight: 500;
+    padding: 9px 12px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: all 0.15s ease;
+  }
+  .sidebar-nav a i {
+    font-size: 16px;
+    color: var(--sidebar-text-muted);
+    width: 20px;
+    text-align: center;
+    transition: color 0.15s ease;
+  }
+  .sidebar-nav a:hover {
+    background: var(--sidebar-hover);
+    color: #fff;
+  }
+  .sidebar-nav a:hover i {
+    color: #78A9FF;
+  }
+  .sidebar-nav a.active {
+    background: var(--sidebar-active);
+    color: #fff;
+    font-weight: 600;
+  }
+  .sidebar-nav a.active i {
+    color: #fff;
+  }
+  
+  .sidebar-footer {
+    padding: 16px;
+    border-top: 1px solid rgba(255,255,255,0.08);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  /* MAIN CONTENT AREA */
+  .admin-main-wrap {
+    flex: 1;
+    margin-left: 260px;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    width: calc(100% - 260px);
+  }
+  
+  /* TOP NAVBAR */
+  header.admin-topbar {
     background: var(--card-bg);
     border-bottom: 1px solid var(--border);
-    padding: 0 32px; 
-    height: 68px;
+    padding: 0 32px;
+    height: 64px;
     display: flex;
-    align-items: center; 
+    align-items: center;
     justify-content: space-between;
     position: sticky;
     top: 0;
     z-index: 100;
     backdrop-filter: blur(12px);
-    transition: all 0.3s ease;
   }
-  .brand-logo {
+  
+  .topbar-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  
+  .mobile-toggle-btn {
+    display: none;
+    background: none;
+    border: none;
     color: var(--text-main);
-    text-decoration: none;
-    font-weight: 700;
-    font-size: 1.05rem;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-  .brand-mark {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 32px;
-    height: 32px;
-    background: #0B1F3A;
-    border: 2px solid var(--gold);
-    color: #fff;
-    border-radius: 8px;
-    font-weight: 700;
-    font-size: 14px;
-    font-family: 'Crimson Pro', serif;
-  }
-  [data-theme="dark"] .brand-mark {
-    background: #0B1F3A;
-    border-color: #78A9FF;
-    color: #78A9FF;
+    font-size: 20px;
+    cursor: pointer;
   }
   
-  header.topbar nav { display: flex; align-items: center; gap: 20px; }
-  header.topbar nav a { 
-    color: var(--text-muted); 
-    font-weight: 600; 
-    font-size: 14px; 
-    text-decoration: none;
-    transition: color 0.2s ease;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
-  header.topbar nav a:hover { color: var(--primary); }
-  
-  /* Theme Toggle Button */
   .theme-toggle-btn {
     background: var(--surface-2);
     border: 1px solid var(--border);
     color: var(--text-main);
-    width: 38px;
-    height: 38px;
+    width: 36px;
+    height: 36px;
     border-radius: 50%;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    font-size: 16px;
+    font-size: 15px;
     transition: all 0.2s ease;
   }
   .theme-toggle-btn:hover {
@@ -136,100 +228,117 @@ const STYLE = `
     color: var(--primary);
   }
   
-  main { max-width: 1100px; margin: 40px auto; padding: 0 24px; animation: slideUpFade 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+  main {
+    flex: 1;
+    max-width: 1080px;
+    width: 100%;
+    margin: 36px auto;
+    padding: 0 32px;
+    animation: slideUpFade 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
   
-  h1 { font-size: 2.2rem; margin-bottom: 8px; font-weight: 700; letter-spacing: -0.03em; color: var(--text-main); }
-  h2 { font-size: 1.3rem; margin-bottom: 20px; font-weight: 700; letter-spacing: -0.02em; color: var(--text-main); }
+  h1 { font-size: 2rem; margin-bottom: 6px; font-weight: 700; letter-spacing: -0.03em; color: var(--text-main); }
+  h2 { font-size: 1.25rem; margin-bottom: 18px; font-weight: 700; letter-spacing: -0.02em; color: var(--text-main); }
   
-  /* Clean Cards */
+  /* Cards */
   .card { 
     background: var(--card-bg);
     border: 1px solid var(--border); 
     border-radius: var(--radius); 
-    padding: 28px 32px; 
-    margin-bottom: 28px; 
+    padding: 24px 28px; 
+    margin-bottom: 24px; 
     box-shadow: var(--shadow);
-    transition: box-shadow 0.25s ease, transform 0.25s ease, border-color 0.25s ease;
-  }
-  .card:hover {
-    box-shadow: 0 14px 36px rgba(0,0,0,0.1);
+    transition: box-shadow 0.25s ease, transform 0.25s ease;
   }
   
   /* Tables */
   table { width: 100%; border-collapse: separate; border-spacing: 0; }
-  th, td { text-align: left; padding: 14px 14px; border-bottom: 1px solid var(--border); font-size: 14px; vertical-align: middle; }
-  th { color: var(--text-faint); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: 0.8px; border-bottom-width: 2px; }
-  tbody tr { transition: all 0.2s ease; }
+  th, td { text-align: left; padding: 12px 14px; border-bottom: 1px solid var(--border); font-size: 13.5px; vertical-align: middle; }
+  th { color: var(--text-faint); font-weight: 600; font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.8px; border-bottom-width: 2px; }
   tbody tr:hover { background: var(--surface-2); }
   
   /* Buttons */
   a.btn, button.btn { 
     display: inline-flex; align-items: center; justify-content: center; gap: 6px;
     background: var(--primary); color: #fff !important; border: 1px solid var(--primary);
-    padding: 8px 18px; border-radius: 8px; text-decoration: none; 
-    font-size: 14px; font-weight: 600; cursor: pointer;
+    padding: 8px 16px; border-radius: 8px; text-decoration: none; 
+    font-size: 13.5px; font-weight: 600; cursor: pointer;
     transition: all 0.2s ease;
   }
   a.btn:hover, button.btn:hover { background: var(--primary-hover); border-color: var(--primary-hover); transform: translateY(-1px); box-shadow: 0 4px 14px rgba(47,111,237,0.3); }
   a.btn:active, button.btn:active { transform: scale(0.98); }
   
   a.btn.secondary, button.btn.secondary { background: var(--card-bg); color: var(--text-main) !important; border: 1px solid var(--border); }
-  a.btn.secondary:hover, button.btn.secondary:hover { background: var(--surface-2); border-color: var(--text-main); color: var(--text-main) !important; }
+  a.btn.secondary:hover, button.btn.secondary:hover { background: var(--surface-2); border-color: var(--text-main); }
   
   a.btn.danger, button.btn.danger { background: var(--card-bg); color: var(--danger) !important; border: 1px solid var(--border); }
-  a.btn.danger:hover, button.btn.danger:hover { background: var(--danger); border-color: var(--danger); color: #fff !important; box-shadow: 0 4px 12px rgba(239,68,68,0.25); }
+  a.btn.danger:hover, button.btn.danger:hover { background: var(--danger); border-color: var(--danger); color: #fff !important; }
   
   /* Links */
-  a.link { color: var(--primary); text-decoration: none; font-size: 14px; margin-right: 14px; font-weight: 600; transition: color 0.2s; }
+  a.link { color: var(--primary); text-decoration: none; font-size: 13.5px; margin-right: 14px; font-weight: 600; }
   a.link:hover { text-decoration: underline; color: var(--primary-hover); }
-  button.link { background: none; border: none; padding: 0; cursor: pointer; color: var(--danger); font-size: 14px; font-weight: 600; }
-  button.link:hover { text-decoration: underline; color: var(--danger-hover); }
   
   /* Grid Links (Dashboard) */
-  .grid-links { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
+  .grid-links { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 18px; }
   .grid-links a { 
     display: flex; flex-direction: column; justify-content: center;
     background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius);
-    padding: 22px 24px; text-decoration: none; color: var(--text-main); font-weight: 600; font-size: 16px;
+    padding: 20px 22px; text-decoration: none; color: var(--text-main); font-weight: 600; font-size: 15px;
     transition: all 0.25s ease;
     box-shadow: var(--shadow);
   }
   .grid-links a:hover { 
     border-color: var(--primary); 
-    box-shadow: 0 12px 30px rgba(47,111,237,0.12); 
+    box-shadow: 0 10px 28px rgba(47,111,237,0.12); 
     transform: translateY(-3px);
   }
-  .grid-links a span { display: block; font-weight: 400; color: var(--text-muted); font-size: 13.5px; margin-top: 6px; }
+  .grid-links a span { display: block; font-weight: 400; color: var(--text-muted); font-size: 13px; margin-top: 6px; }
   
   /* Forms */
-  label { display: block; font-weight: 600; font-size: 14px; margin: 20px 0 8px; color: var(--text-main); }
+  label { display: block; font-weight: 600; font-size: 13.5px; margin: 18px 0 6px; color: var(--text-main); }
   input[type=text], input[type=number], input[type=password], textarea, select {
-    width: 100%; padding: 10px 14px; background: var(--card-bg); border: 1px solid var(--border); 
-    border-radius: 8px; font-size: 14px; font-family: inherit; color: var(--text-main);
-    transition: border 0.15s ease, box-shadow 0.15s ease;
+    width: 100%; padding: 10px 12px; background: var(--card-bg); border: 1px solid var(--border); 
+    border-radius: 8px; font-size: 13.5px; font-family: inherit; color: var(--text-main);
   }
   input:focus, textarea:focus, select:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-tint); }
-  textarea { min-height: 140px; resize: vertical; line-height: 1.5; }
+  textarea { min-height: 120px; resize: vertical; line-height: 1.5; }
   
-  .checkbox-row { display: flex; align-items: center; gap: 10px; margin-top: 20px; }
+  .checkbox-row { display: flex; align-items: center; gap: 10px; margin-top: 18px; }
   .checkbox-row input { width: 18px; height: 18px; cursor: pointer; accent-color: var(--primary); }
-  .checkbox-row label { margin: 0; cursor: pointer; color: var(--text-main); font-size: 14px; }
+  .checkbox-row label { margin: 0; cursor: pointer; color: var(--text-main); font-size: 13.5px; }
   
-  .actions { margin-top: 28px; display: flex; gap: 14px; padding-top: 20px; border-top: 1px solid var(--border); }
+  .actions { margin-top: 24px; display: flex; gap: 12px; padding-top: 18px; border-top: 1px solid var(--border); }
   
-  /* Alerts */
   .flash { 
     background: var(--primary); color: #fff;
-    padding: 14px 18px; border-radius: 8px; margin-bottom: 24px; font-size: 14px; font-weight: 600;
+    padding: 12px 16px; border-radius: 8px; margin-bottom: 20px; font-size: 13.5px; font-weight: 600;
     display: flex; align-items: center; gap: 8px; animation: slideDown 0.3s ease-out;
-    box-shadow: 0 4px 16px rgba(47,111,237,0.25);
   }
   
-  .muted { color: var(--text-muted); font-size: 14px; }
+  .muted { color: var(--text-muted); font-size: 13.5px; }
   form.inline { display: inline; }
   
+  @media(max-width: 900px) {
+    aside.admin-sidebar {
+      transform: translateX(-100%);
+    }
+    aside.admin-sidebar.open {
+      transform: translateX(0);
+    }
+    .admin-main-wrap {
+      margin-left: 0;
+      width: 100%;
+    }
+    .mobile-toggle-btn {
+      display: inline-block;
+    }
+    main {
+      padding: 0 16px;
+    }
+  }
+  
   @keyframes slideUpFade { 
-    from { opacity: 0; transform: translateY(16px); } 
+    from { opacity: 0; transform: translateY(14px); } 
     to { opacity: 1; transform: translateY(0); } 
   }
   @keyframes slideDown { 
@@ -239,6 +348,7 @@ const STYLE = `
 `;
 
 function layout({ title, authed, body, flash }) {
+  const currentPath = '';
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -263,39 +373,99 @@ function layout({ title, authed, body, flash }) {
     const icon = document.getElementById('adminThemeIcon');
     if (icon) icon.className = next === 'dark' ? 'bi bi-sun-fill' : 'bi bi-moon-stars-fill';
   }
+  function toggleSidebar() {
+    const sb = document.querySelector('aside.admin-sidebar');
+    if (sb) sb.classList.toggle('open');
+  }
 </script>
 </head>
 <body>
-<header class="topbar">
-  <a href="/admin" class="brand-logo" style="color:var(--primary); font-weight:700; font-size:1.15rem; letter-spacing:-0.01em;">
-    Rashel Mahmud Rabbi
-  </a>
-  <div style="display:flex; align-items:center; gap:16px;">
-    ${authed ? `<nav>
-      <a href="/admin"><i class="bi bi-grid-fill"></i> Dashboard</a>
-      <a href="/admin/settings"><i class="bi bi-gear-fill"></i> Settings</a>
-      <a href="/admin/gallery"><i class="bi bi-images"></i> Gallery</a>
-      <a href="/admin/cv"><i class="bi bi-file-earmark-person-fill"></i> Manage CV</a>
-      <a href="/admin/change-password"><i class="bi bi-key-fill"></i> Password</a>
-      <a href="https://rashelmahmudrabbi.github.io/" target="_blank" style="color:var(--gold-soft);"><i class="bi bi-box-arrow-up-right"></i> Live Site</a>
-      <form class="inline" method="post" action="/admin/logout">
-        <button class="btn secondary" style="padding:6px 12px; font-size:13px;"><i class="bi bi-box-arrow-right"></i> Log out</button>
-      </form>
-    </nav>` : ''}
-    <button class="theme-toggle-btn" onclick="toggleAdminTheme()" title="Toggle Dark/Light Mode">
-      <i id="adminThemeIcon" class="bi bi-moon-stars-fill"></i>
-    </button>
+${authed ? `
+<aside class="admin-sidebar">
+  <div class="sidebar-header">
+    <a href="/admin" class="sidebar-brand">
+      <i class="bi bi-shield-lock-fill text-primary" style="font-size:20px; color:#78A9FF;"></i>
+      <span>Admin Control</span>
+    </a>
   </div>
-</header>
-<main>
-  ${flash ? `<div class="flash"><i class="bi bi-info-circle-fill"></i> ${esc(flash)}</div>` : ''}
-  ${body}
-</main>
+  
+  <div class="sidebar-nav">
+    <div class="sidebar-category">Overview</div>
+    <a href="/admin"><i class="bi bi-grid-fill"></i> Dashboard</a>
+    <a href="/admin/settings"><i class="bi bi-gear-fill"></i> Site Settings</a>
+    <a href="/admin/cv"><i class="bi bi-file-earmark-person-fill"></i> Manage CV</a>
+    
+    <div class="sidebar-category">Academic & Research</div>
+    <a href="/admin/publications"><i class="bi bi-journal-text"></i> Publications</a>
+    <a href="/admin/research-interests"><i class="bi bi-lightbulb-fill"></i> Research Interests</a>
+    <a href="/admin/education"><i class="bi bi-mortarboard-fill"></i> Education</a>
+    <a href="/admin/experience"><i class="bi bi-briefcase-fill"></i> Experience</a>
+    <a href="/admin/references"><i class="bi bi-person-lines-fill"></i> References</a>
+    
+    <div class="sidebar-category">Portfolio & Media</div>
+    <a href="/admin/projects"><i class="bi bi-kanban"></i> Projects</a>
+    <a href="/admin/gallery"><i class="bi bi-images"></i> Gallery</a>
+    <a href="/admin/blog"><i class="bi bi-pencil-square"></i> Blog Posts</a>
+    
+    <div class="sidebar-category">Recognition & Teaching</div>
+    <a href="/admin/awards"><i class="bi bi-trophy-fill"></i> Awards</a>
+    <a href="/admin/certifications"><i class="bi bi-patch-check-fill"></i> Certifications</a>
+    <a href="/admin/activities"><i class="bi bi-activity"></i> Activities</a>
+    <a href="/admin/teaching-roles"><i class="bi bi-person-badge"></i> Teaching</a>
+  </div>
+  
+  <div class="sidebar-footer">
+    <a href="https://rashelmahmudrabbi.github.io/" target="_blank" class="btn secondary" style="font-size:12.5px; justify-content:flex-start; width:100%;">
+      <i class="bi bi-box-arrow-up-right"></i> Live Portfolio
+    </a>
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:4px;">
+      <a href="/admin/change-password" style="color:var(--sidebar-text-muted); font-size:12px; text-decoration:none;">
+        <i class="bi bi-key-fill"></i> Password
+      </a>
+      <form class="inline" method="post" action="/admin/logout">
+        <button style="background:none; border:none; color:#EF4444; font-size:12px; cursor:pointer; font-weight:600;">
+          <i class="bi bi-box-arrow-right"></i> Logout
+        </button>
+      </form>
+    </div>
+  </div>
+</aside>` : ''}
+
+<div class="${authed ? 'admin-main-wrap' : 'w-100'}">
+  <header class="admin-topbar">
+    <div class="topbar-left">
+      ${authed ? `<button class="mobile-toggle-btn" onclick="toggleSidebar()" aria-label="Toggle Sidebar"><i class="bi bi-list"></i></button>` : ''}
+      <a href="/admin" style="color:var(--primary); font-weight:700; font-size:1.15rem; text-decoration:none; letter-spacing:-0.01em;">
+        Rashel Mahmud Rabbi
+      </a>
+    </div>
+    <div style="display:flex; align-items:center; gap:14px;">
+      ${authed ? `<a href="https://rashelmahmudrabbi.github.io/" target="_blank" class="btn secondary" style="padding:6px 12px; font-size:12.5px;"><i class="bi bi-box-arrow-up-right"></i> Preview Site</a>` : ''}
+      <button class="theme-toggle-btn" onclick="toggleAdminTheme()" title="Toggle Dark/Light Mode">
+        <i id="adminThemeIcon" class="bi bi-moon-stars-fill"></i>
+      </button>
+    </div>
+  </header>
+  
+  <main>
+    ${flash ? `<div class="flash"><i class="bi bi-info-circle-fill"></i> ${esc(flash)}</div>` : ''}
+    ${body}
+  </main>
+</div>
+
 <script>
   document.addEventListener('DOMContentLoaded', () => {
     const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
     const icon = document.getElementById('adminThemeIcon');
     if (icon) icon.className = isDark ? 'bi bi-sun-fill' : 'bi bi-moon-stars-fill';
+    
+    // Highlight active link in sidebar
+    const currentPath = window.location.pathname;
+    document.querySelectorAll('.sidebar-nav a').forEach(a => {
+      if (a.getAttribute('href') === currentPath) {
+        a.classList.add('active');
+      }
+    });
   });
 </script>
 </body>
