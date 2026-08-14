@@ -321,8 +321,8 @@ const STYLE = `
   .muted { color: var(--text-muted); font-size: 13.5px; }
   form.inline { display: inline; }
   
-  /* Rich Text Editor & Toolbar */
-  .rich-editor-container {
+  /* Visual WYSIWYG Editor & Toolbar */
+  .wysiwyg-wrapper {
     border: 1px solid var(--border);
     border-radius: 8px;
     background: var(--card-bg);
@@ -330,7 +330,7 @@ const STYLE = `
     margin-top: 6px;
     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
   }
-  .rich-toolbar {
+  .wysiwyg-toolbar {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
@@ -338,6 +338,7 @@ const STYLE = `
     padding: 6px 10px;
     background: var(--surface-2);
     border-bottom: 1px solid var(--border);
+    user-select: none;
   }
   .toolbar-group {
     display: flex;
@@ -354,17 +355,18 @@ const STYLE = `
     background: transparent;
     border: 1px solid transparent;
     border-radius: 4px;
-    padding: 3px 6px;
-    font-size: 12.5px;
+    padding: 4px 7px;
+    font-size: 13px;
     font-weight: 600;
     color: var(--text-main);
     cursor: pointer;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-width: 26px;
-    height: 26px;
+    min-width: 28px;
+    height: 28px;
     transition: all 0.15s ease;
+    user-select: none;
   }
   .toolbar-btn:hover {
     background: var(--sidebar-hover);
@@ -374,43 +376,74 @@ const STYLE = `
   .toolbar-btn:active {
     background: var(--primary-tint);
   }
-  .preview-toggle-btn {
-    background: var(--card-bg);
-    border-color: var(--border);
+  .toolbar-btn.mode-btn {
     font-size: 11.5px;
-    padding: 2px 9px;
-    border-radius: 6px;
+    padding: 2px 8px;
+    border: 1px solid var(--border);
+    background: var(--card-bg);
+    border-radius: 5px;
+    font-weight: 600;
+    height: 25px;
   }
-  .rich-textarea {
+  .toolbar-btn.mode-btn.active {
+    background: var(--primary);
+    color: #ffffff;
+    border-color: var(--primary);
+  }
+  .wysiwyg-visual-editor {
+    min-height: 180px;
+    max-height: 540px;
+    overflow-y: auto;
+    padding: 14px 16px;
+    font-family: inherit;
+    font-size: 14px;
+    line-height: 1.65;
+    color: var(--text-main);
+    background: var(--card-bg);
+    outline: none;
+  }
+  .wysiwyg-visual-editor:focus {
+    box-shadow: inset 0 0 0 2px var(--primary-tint);
+  }
+  .wysiwyg-visual-editor p { margin-bottom: 0.75rem; }
+  .wysiwyg-visual-editor p:last-child { margin-bottom: 0; }
+  .wysiwyg-visual-editor ul, .wysiwyg-visual-editor ol { margin: 0.4rem 0 0.8rem 1.4rem; padding-left: 0.5rem; }
+  .wysiwyg-visual-editor li { margin-bottom: 0.25rem; }
+  .wysiwyg-visual-editor strong, .wysiwyg-visual-editor b { font-weight: 700; color: var(--primary); }
+  .wysiwyg-visual-editor em, .wysiwyg-visual-editor i { font-style: italic; }
+  .wysiwyg-visual-editor u { text-decoration: underline; }
+  
+  .wysiwyg-code-editor {
     width: 100% !important;
-    min-height: 140px;
+    min-height: 180px;
     border: none !important;
     border-radius: 0 !important;
-    padding: 12px 14px !important;
-    font-family: inherit;
-    font-size: 13.5px;
-    line-height: 1.6;
-    background: transparent !important;
+    padding: 14px 16px !important;
+    font-family: 'Consolas', 'Courier New', monospace;
+    font-size: 13px;
+    line-height: 1.5;
+    background: var(--card-bg) !important;
     color: var(--text-main);
     resize: vertical;
-    box-shadow: none !important;
     outline: none !important;
+    box-shadow: none !important;
   }
-  .rich-preview-pane {
-    min-height: 140px;
+  .wysiwyg-preview-pane {
+    min-height: 180px;
     padding: 14px 16px;
-    background: var(--card-bg);
+    background: var(--surface-2);
     color: var(--text-main);
-    font-size: 13.5px;
+    font-size: 14px;
     line-height: 1.65;
     border-top: 1px solid var(--border);
   }
-  .rich-preview-pane p { margin-bottom: 0.75rem; }
-  .rich-preview-pane p:last-child { margin-bottom: 0; }
-  .rich-preview-pane ul, .rich-preview-pane ol { margin: 0.4rem 0 0.75rem 1.4rem; }
-  .rich-preview-pane strong, .rich-preview-pane b { font-weight: 700; color: var(--primary); }
-  .rich-preview-pane em, .rich-preview-pane i { font-style: italic; }
-  .rich-preview-pane u { text-decoration: underline; }
+  .wysiwyg-preview-pane p { margin-bottom: 0.75rem; }
+  .wysiwyg-preview-pane p:last-child { margin-bottom: 0; }
+  .wysiwyg-preview-pane ul, .wysiwyg-preview-pane ol { margin: 0.4rem 0 0.8rem 1.4rem; padding-left: 0.5rem; }
+  .wysiwyg-preview-pane li { margin-bottom: 0.25rem; }
+  .wysiwyg-preview-pane strong, .wysiwyg-preview-pane b { font-weight: 700; color: var(--primary); }
+  .wysiwyg-preview-pane em, .wysiwyg-preview-pane i { font-style: italic; }
+  .wysiwyg-preview-pane u { text-decoration: underline; }
   
   @media(max-width: 900px) {
     aside.admin-sidebar {
@@ -472,138 +505,88 @@ function layout({ title, authed, body, flash }) {
     if (sb) sb.classList.toggle('open');
   }
 
-  function getSelectionInfo(textarea) {
-    const start = textarea.selectionStart;
-    const end = textarea.selectionEnd;
-    const val = textarea.value;
-    const selected = val.substring(start, end);
-    return { start: start, end: end, val: val, selected: selected };
+  function execCmd(id, cmd, val) {
+    const visual = document.getElementById('visual_' + id);
+    if (!visual) return;
+    visual.focus();
+    document.execCommand(cmd, false, val || null);
+    syncWysiwygContent(id, 'visual');
   }
 
-  function replaceSelection(textarea, newText, newCursorStart, newCursorEnd) {
-    const s = textarea.selectionStart;
-    const e = textarea.selectionEnd;
-    textarea.setRangeText(newText, s, e, 'select');
-    textarea.focus();
-    if (newCursorStart !== undefined) {
-      textarea.setSelectionRange(newCursorStart, newCursorEnd !== undefined ? newCursorEnd : newCursorStart);
-    }
+  function execFormatBlock(id, tag) {
+    const visual = document.getElementById('visual_' + id);
+    if (!visual) return;
+    visual.focus();
+    document.execCommand('formatBlock', false, '<' + tag + '>');
+    syncWysiwygContent(id, 'visual');
   }
 
-  function richFormat(id, type) {
-    const ta = document.getElementById(id);
-    if (!ta) return;
-    const info = getSelectionInfo(ta);
-    const start = info.start;
-    const selected = info.selected;
-    
-    if (type === 'bold') {
-      const text = selected || 'bold text';
-      replaceSelection(ta, '<strong>' + text + '</strong>', start + 8, start + 8 + text.length);
-    } else if (type === 'italic') {
-      const text = selected || 'italic text';
-      replaceSelection(ta, '<em>' + text + '</em>', start + 4, start + 4 + text.length);
-    } else if (type === 'underline') {
-      const text = selected || 'underlined text';
-      replaceSelection(ta, '<u>' + text + '</u>', start + 3, start + 3 + text.length);
-    } else if (type === 'strike') {
-      const text = selected || 'strikethrough text';
-      replaceSelection(ta, '<s>' + text + '</s>', start + 3, start + 3 + text.length);
-    } else if (type === 'p') {
-      const text = selected || 'Paragraph text...';
-      replaceSelection(ta, '<p>' + text + '</p>', start + 3, start + 3 + text.length);
-    } else if (type === 'h4') {
-      const text = selected || 'Subheading';
-      replaceSelection(ta, '<h4>' + text + '</h4>', start + 4, start + 4 + text.length);
-    } else if (type === 'ul') {
-      let items = selected ? selected.split('\n').filter(Boolean) : [];
-      if (items.length === 0) items = ['First bullet item', 'Second bullet item'];
-      const lis = items.map(function(it) { return '  <li>' + it.replace(/^\s*[-*•]\s*/, '') + '</li>'; }).join('\n');
-      const replacement = '<ul>\n' + lis + '\n</ul>';
-      replaceSelection(ta, replacement, start + 4, start + replacement.length - 6);
-    } else if (type === 'ol') {
-      let items = selected ? selected.split('\n').filter(Boolean) : [];
-      if (items.length === 0) items = ['First step', 'Second step'];
-      const lis = items.map(function(it) { return '  <li>' + it.replace(/^\s*\d+[.)]\s*/, '') + '</li>'; }).join('\n');
-      const replacement = '<ol>\n' + lis + '\n</ol>';
-      replaceSelection(ta, replacement, start + 4, start + replacement.length - 6);
-    }
-  }
-
-  function richAlign(id, align) {
-    const ta = document.getElementById(id);
-    if (!ta) return;
-    const info = getSelectionInfo(ta);
-    const start = info.start;
-    const selected = info.selected;
-    const text = selected || 'Aligned text...';
-    const tag = '<p style="text-align: ' + align + ';">' + text + '</p>';
-    replaceSelection(ta, tag, start + tag.indexOf('>') + 1, start + tag.indexOf('>') + 1 + text.length);
-  }
-
-  function richInsertLink(id) {
-    const ta = document.getElementById(id);
-    if (!ta) return;
-    const info = getSelectionInfo(ta);
-    const start = info.start;
-    const selected = info.selected;
+  function execCreateLink(id) {
+    const visual = document.getElementById('visual_' + id);
+    if (!visual) return;
+    visual.focus();
     const url = prompt('Enter URL (e.g. https://...):', 'https://');
-    if (!url) return;
-    const label = selected || prompt('Enter link text:', 'Link text') || url;
-    const tag = '<a href="' + url + '" target="_blank" rel="noopener noreferrer">' + label + '</a>';
-    replaceSelection(ta, tag, start, start + tag.length);
-  }
-
-  function richClearFormat(id) {
-    const ta = document.getElementById(id);
-    if (!ta) return;
-    const info = getSelectionInfo(ta);
-    const start = info.start;
-    const selected = info.selected;
-    if (!selected) {
-      if (confirm('Clear all HTML formatting tags in this field?')) {
-        ta.value = ta.value.replace(/<[^>]*>/g, '');
-      }
-      return;
-    }
-    const clean = selected.replace(/<[^>]*>/g, '');
-    replaceSelection(ta, clean, start, start + clean.length);
-  }
-
-  function handleRichKeydown(e, id) {
-    if (e.ctrlKey || e.metaKey) {
-      if (e.key === 'b' || e.key === 'B') {
-        e.preventDefault();
-        richFormat(id, 'bold');
-      } else if (e.key === 'i' || e.key === 'I') {
-        e.preventDefault();
-        richFormat(id, 'italic');
-      } else if (e.key === 'u' || e.key === 'U') {
-        e.preventDefault();
-        richFormat(id, 'underline');
-      }
+    if (url) {
+      document.execCommand('createLink', false, url);
+      syncWysiwygContent(id, 'visual');
     }
   }
 
-  function toggleRichPreview(id) {
-    const ta = document.getElementById(id);
-    const prev = document.getElementById('preview_' + id);
-    const btn = document.getElementById('btn_preview_' + id);
-    if (!ta || !prev) return;
-    const isShowing = prev.style.display !== 'none';
-    if (isShowing) {
-      prev.style.display = 'none';
-      ta.style.display = 'block';
-      if (btn) btn.innerHTML = '<i class="bi bi-eye"></i> Preview';
-    } else {
-      let raw = ta.value;
-      if (!raw.includes('<p>') && !raw.includes('<br>') && !raw.includes('<ul>') && !raw.includes('<ol>')) {
-        raw = raw.split(/\n\s*\n/).map(function(p) { return '<p>' + p.replace(/\n/g, '<br/>') + '</p>'; }).join('');
-      }
-      prev.innerHTML = raw || '<p class="muted"><i>(Empty content)</i></p>';
-      ta.style.display = 'none';
-      prev.style.display = 'block';
-      if (btn) btn.innerHTML = '<i class="bi bi-pencil"></i> Edit';
+  function syncWysiwygContent(id, fromMode) {
+    const visual = document.getElementById('visual_' + id);
+    const code = document.getElementById('code_' + id);
+    const preview = document.getElementById('preview_' + id);
+    const hidden = document.getElementById(id);
+    if (!visual || !code || !hidden) return;
+
+    let html = '';
+    if (fromMode === 'visual') {
+      html = visual.innerHTML;
+      code.value = html;
+    } else if (fromMode === 'code') {
+      html = code.value;
+      visual.innerHTML = html;
+    }
+    hidden.value = html;
+    if (preview) {
+      preview.innerHTML = html || '<p class="muted"><i>(Empty content)</i></p>';
+    }
+  }
+
+  function switchWysiwygMode(id, targetMode) {
+    const visual = document.getElementById('visual_' + id);
+    const code = document.getElementById('code_' + id);
+    const preview = document.getElementById('preview_' + id);
+    const btnVisual = document.getElementById('btn_visual_' + id);
+    const btnCode = document.getElementById('btn_code_' + id);
+    const btnPreview = document.getElementById('btn_preview_' + id);
+    if (!visual || !code || !preview) return;
+
+    if (visual.style.display !== 'none') {
+      syncWysiwygContent(id, 'visual');
+    } else if (code.style.display !== 'none') {
+      syncWysiwygContent(id, 'code');
+    }
+
+    visual.style.display = 'none';
+    code.style.display = 'none';
+    preview.style.display = 'none';
+    if (btnVisual) btnVisual.classList.remove('active');
+    if (btnCode) btnCode.classList.remove('active');
+    if (btnPreview) btnPreview.classList.remove('active');
+
+    if (targetMode === 'visual') {
+      visual.style.display = 'block';
+      visual.focus();
+      if (btnVisual) btnVisual.classList.add('active');
+    } else if (targetMode === 'code') {
+      code.style.display = 'block';
+      code.focus();
+      if (btnCode) btnCode.classList.add('active');
+    } else if (targetMode === 'preview') {
+      preview.innerHTML = visual.innerHTML || '<p class="muted"><i>(Empty content)</i></p>';
+      preview.style.display = 'block';
+      if (btnPreview) btnPreview.classList.add('active');
     }
   }
 </script>
@@ -674,6 +657,7 @@ ${authed ? `
       <a href="/admin" style="color:var(--primary); font-weight:700; font-size:1.15rem; text-decoration:none; letter-spacing:-0.01em;">
         Rashel Mahmud Rabbi
       </a>
+      <span class="role-badge">Administrator</span>
     </div>
     <div style="display:flex; align-items:center; gap:14px;">
       ${authed ? `<a href="https://rashelmahmudrabbi.github.io/" target="_blank" class="btn secondary" style="padding:6px 12px; font-size:12.5px;"><i class="bi bi-box-arrow-up-right"></i> Preview Site</a>` : ''}
@@ -690,17 +674,36 @@ ${authed ? `
 </div>
 
 <script>
-  document.addEventListener('DOMContentLoaded', () => {
+  document.addEventListener('DOMContentLoaded', function() {
     const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
     const icon = document.getElementById('adminThemeIcon');
     if (icon) icon.className = isDark ? 'bi bi-sun-fill' : 'bi bi-moon-stars-fill';
     
     // Highlight active link in sidebar
     const currentPath = window.location.pathname;
-    document.querySelectorAll('.sidebar-nav a').forEach(a => {
+    document.querySelectorAll('.sidebar-nav a').forEach(function(a) {
       if (a.getAttribute('href') === currentPath) {
         a.classList.add('active');
       }
+    });
+
+    // Form submit auto-sync for all WYSIWYG editors
+    document.querySelectorAll('form').forEach(function(form) {
+      form.addEventListener('submit', function() {
+        document.querySelectorAll('.wysiwyg-wrapper').forEach(function(wrap) {
+          const id = wrap.getAttribute('data-id');
+          if (id) {
+            const visual = document.getElementById('visual_' + id);
+            const hidden = document.getElementById(id);
+            const code = document.getElementById('code_' + id);
+            if (code && code.style.display !== 'none') {
+              hidden.value = code.value;
+            } else if (visual && hidden) {
+              hidden.value = visual.innerHTML;
+            }
+          }
+        });
+      });
     });
   });
 </script>
@@ -709,42 +712,53 @@ ${authed ? `
 }
 
 function richTextarea(name, label, value, customId) {
-  const v = value === undefined || value === null ? '' : value;
-  const id = customId || `rich_${name.replace(/[^a-zA-Z0-9_]/g, '_')}`;
+  const v = value === undefined || value === null ? '' : String(value);
+  const id = customId || 'wysiwyg_' + name.replace(/[^a-zA-Z0-9_]/g, '_');
+  
+  let initialHtml = v;
+  if (initialHtml && !initialHtml.includes('<p>') && !initialHtml.includes('<br>') && !initialHtml.includes('<ul>')) {
+    initialHtml = initialHtml.split(/\n\s*\n/).map(function(p) { return '<p>' + p.trim().replace(/\n/g, '<br/>') + '</p>'; }).join('');
+  }
+
   return `
-  <div class="rich-editor-container" data-editor-id="${id}">
-    <div class="rich-toolbar">
+  <div class="wysiwyg-wrapper" id="wrap_${id}" data-id="${id}">
+    <div class="wysiwyg-toolbar">
       <div class="toolbar-group">
-        <button type="button" class="toolbar-btn" onclick="richFormat('${id}', 'bold')" title="Bold (Ctrl+B)"><i class="bi bi-type-bold"></i></button>
-        <button type="button" class="toolbar-btn" onclick="richFormat('${id}', 'italic')" title="Italic (Ctrl+I)"><i class="bi bi-type-italic"></i></button>
-        <button type="button" class="toolbar-btn" onclick="richFormat('${id}', 'underline')" title="Underline (Ctrl+U)"><i class="bi bi-type-underline"></i></button>
-        <button type="button" class="toolbar-btn" onclick="richFormat('${id}', 'strike')" title="Strikethrough"><i class="bi bi-type-strikethrough"></i></button>
+        <button type="button" class="toolbar-btn" onmousedown="event.preventDefault()" onclick="execCmd('${id}', 'bold')" title="Bold (Ctrl+B)"><i class="bi bi-type-bold"></i></button>
+        <button type="button" class="toolbar-btn" onmousedown="event.preventDefault()" onclick="execCmd('${id}', 'italic')" title="Italic (Ctrl+I)"><i class="bi bi-type-italic"></i></button>
+        <button type="button" class="toolbar-btn" onmousedown="event.preventDefault()" onclick="execCmd('${id}', 'underline')" title="Underline (Ctrl+U)"><i class="bi bi-type-underline"></i></button>
+        <button type="button" class="toolbar-btn" onmousedown="event.preventDefault()" onclick="execCmd('${id}', 'strikeThrough')" title="Strikethrough"><i class="bi bi-type-strikethrough"></i></button>
       </div>
       <div class="toolbar-divider"></div>
       <div class="toolbar-group">
-        <button type="button" class="toolbar-btn" onclick="richFormat('${id}', 'p')" title="Paragraph">&lt;p&gt;</button>
-        <button type="button" class="toolbar-btn" onclick="richFormat('${id}', 'h4')" title="Heading 4">H4</button>
-        <button type="button" class="toolbar-btn" onclick="richFormat('${id}', 'ul')" title="Bullet List"><i class="bi bi-list-ul"></i></button>
-        <button type="button" class="toolbar-btn" onclick="richFormat('${id}', 'ol')" title="Numbered List"><i class="bi bi-list-ol"></i></button>
+        <button type="button" class="toolbar-btn" onmousedown="event.preventDefault()" onclick="execFormatBlock('${id}', 'p')" title="Paragraph (Normal text)">&para;</button>
+        <button type="button" class="toolbar-btn" onmousedown="event.preventDefault()" onclick="execFormatBlock('${id}', 'h4')" title="Heading 4">H4</button>
+        <button type="button" class="toolbar-btn" onmousedown="event.preventDefault()" onclick="execCmd('${id}', 'insertUnorderedList')" title="Bullet List"><i class="bi bi-list-ul"></i></button>
+        <button type="button" class="toolbar-btn" onmousedown="event.preventDefault()" onclick="execCmd('${id}', 'insertOrderedList')" title="Numbered List"><i class="bi bi-list-ol"></i></button>
       </div>
       <div class="toolbar-divider"></div>
       <div class="toolbar-group">
-        <button type="button" class="toolbar-btn" onclick="richAlign('${id}', 'left')" title="Align Left"><i class="bi bi-text-left"></i></button>
-        <button type="button" class="toolbar-btn" onclick="richAlign('${id}', 'center')" title="Align Center"><i class="bi bi-text-center"></i></button>
-        <button type="button" class="toolbar-btn" onclick="richAlign('${id}', 'right')" title="Align Right"><i class="bi bi-text-right"></i></button>
-        <button type="button" class="toolbar-btn" onclick="richAlign('${id}', 'justify')" title="Justify Full Text"><i class="bi bi-justify"></i></button>
+        <button type="button" class="toolbar-btn" onmousedown="event.preventDefault()" onclick="execCmd('${id}', 'justifyLeft')" title="Align Left"><i class="bi bi-text-left"></i></button>
+        <button type="button" class="toolbar-btn" onmousedown="event.preventDefault()" onclick="execCmd('${id}', 'justifyCenter')" title="Align Center"><i class="bi bi-text-center"></i></button>
+        <button type="button" class="toolbar-btn" onmousedown="event.preventDefault()" onclick="execCmd('${id}', 'justifyRight')" title="Align Right"><i class="bi bi-text-right"></i></button>
+        <button type="button" class="toolbar-btn" onmousedown="event.preventDefault()" onclick="execCmd('${id}', 'justifyFull')" title="Justify Full Text"><i class="bi bi-justify"></i></button>
       </div>
       <div class="toolbar-divider"></div>
       <div class="toolbar-group">
-        <button type="button" class="toolbar-btn" onclick="richInsertLink('${id}')" title="Insert Link"><i class="bi bi-link-45deg"></i></button>
-        <button type="button" class="toolbar-btn" onclick="richClearFormat('${id}')" title="Clear Formatting"><i class="bi bi-eraser"></i></button>
+        <button type="button" class="toolbar-btn" onmousedown="event.preventDefault()" onclick="execCreateLink('${id}')" title="Insert Link"><i class="bi bi-link-45deg"></i></button>
+        <button type="button" class="toolbar-btn" onmousedown="event.preventDefault()" onclick="execCmd('${id}', 'removeFormat')" title="Clear Formatting"><i class="bi bi-eraser"></i></button>
       </div>
-      <div class="toolbar-group" style="margin-left: auto;">
-        <button type="button" class="toolbar-btn preview-toggle-btn" id="btn_preview_${id}" onclick="toggleRichPreview('${id}')" title="Toggle Live Preview"><i class="bi bi-eye"></i> Preview</button>
+      <div class="toolbar-group" style="margin-left: auto; gap: 4px;">
+        <button type="button" class="toolbar-btn mode-btn active" id="btn_visual_${id}" onmousedown="event.preventDefault()" onclick="switchWysiwygMode('${id}', 'visual')" title="Visual WYSIWYG Mode"><i class="bi bi-pencil-square"></i> Visual</button>
+        <button type="button" class="toolbar-btn mode-btn" id="btn_code_${id}" onmousedown="event.preventDefault()" onclick="switchWysiwygMode('${id}', 'code')" title="HTML Source Code Mode"><i class="bi bi-code-slash"></i> HTML</button>
+        <button type="button" class="toolbar-btn mode-btn" id="btn_preview_${id}" onmousedown="event.preventDefault()" onclick="switchWysiwygMode('${id}', 'preview')" title="Live Preview Mode"><i class="bi bi-eye"></i> Preview</button>
       </div>
     </div>
-    <textarea id="${id}" name="${esc(name)}" class="rich-textarea" onkeydown="handleRichKeydown(event, '${id}')" placeholder="Type text or use the formatting toolbar above...">${esc(v)}</textarea>
-    <div id="preview_${id}" class="rich-preview-pane" style="display:none;"></div>
+    
+    <div id="visual_${id}" class="wysiwyg-visual-editor" contenteditable="true" oninput="syncWysiwygContent('${id}', 'visual')">${initialHtml}</div>
+    <textarea id="code_${id}" class="wysiwyg-code-editor" style="display:none;" oninput="syncWysiwygContent('${id}', 'code')">${esc(initialHtml)}</textarea>
+    <div id="preview_${id}" class="wysiwyg-preview-pane" style="display:none;"></div>
+    <textarea id="${id}" name="${esc(name)}" style="display:none;">${esc(initialHtml)}</textarea>
   </div>`;
 }
 
