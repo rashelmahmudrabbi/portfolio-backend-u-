@@ -42,6 +42,9 @@ async function main() {
     await seedSimpleList(client, 'courses', data.courses, ['name', 'institution', 'period', 'role']);
     await seedSimpleList(client, 'blog_posts', data.blog, ['title', 'slug', 'date', 'read_time', 'category', 'excerpt', 'content', 'featured']);
     await seedSimpleList(client, 'reference_list', data.references, ['name', 'role', 'org', 'note', 'phone', 'email']);
+    if (data.spotlights) {
+      await seedSimpleList(client, 'spotlights', data.spotlights, ['badge', 'badge_type', 'title', 'description', 'tag', 'image', 'link_url', 'link_label']);
+    }
 
     // Gallery (events + nested photos)
     await client.query('DELETE FROM gallery_photos');
