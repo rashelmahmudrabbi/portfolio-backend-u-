@@ -8,11 +8,7 @@ const COOKIE_NAME = 'portfolio_admin';
 const SESSION_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
 
 function getSecret() {
-  const secret = process.env.SECRET_KEY;
-  if (!secret) {
-    throw new Error('SECRET_KEY is not set. Add it in your Vercel project settings.');
-  }
-  return secret;
+  return process.env.SECRET_KEY || 'portfolio-default-dev-secret-key-change-in-prod';
 }
 
 function sign(value) {

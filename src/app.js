@@ -12,61 +12,25 @@ let tablesEnsured = false;
 async function ensureTables(sql) {
   if (tablesEnsured) return;
   try {
-    await sql(`
-      CREATE TABLE IF NOT EXISTS spotlights (
-        id SERIAL PRIMARY KEY,
-        sort_order INTEGER DEFAULT 0,
-        badge TEXT DEFAULT 'Top Highlight',
-        badge_type TEXT DEFAULT 'badge-pub',
-        title TEXT DEFAULT '',
-        description TEXT DEFAULT '',
-        tag TEXT DEFAULT '',
-        image TEXT DEFAULT '',
-        link_url TEXT DEFAULT '',
-        link_label TEXT DEFAULT 'Explore'
-      );
-    `);
-    try {
-      await sql(`ALTER TABLE spotlights ADD COLUMN IF NOT EXISTS image TEXT DEFAULT ''`);
-    } catch (colErr) {}
-    try {
-      await sql(`ALTER TABLE site_settings ADD COLUMN IF NOT EXISTS hero_status_text TEXT DEFAULT 'Open to research'`);
-      await sql(`ALTER TABLE site_settings ADD COLUMN IF NOT EXISTS about_kicker TEXT DEFAULT 'ABOUT ME'`);
-      await sql(`ALTER TABLE site_settings ADD COLUMN IF NOT EXISTS about_headline TEXT DEFAULT 'AI research with a practical mindset.'`);
-      await sql(`ALTER TABLE site_settings ADD COLUMN IF NOT EXISTS about_text TEXT DEFAULT ''`);
-      await sql(`ALTER TABLE site_settings ADD COLUMN IF NOT EXISTS about_pill_1 TEXT DEFAULT 'AI & Computer Vision'`);
-      await sql(`ALTER TABLE site_settings ADD COLUMN IF NOT EXISTS about_pill_2 TEXT DEFAULT 'Medical Image Analysis'`);
-      await sql(`ALTER TABLE site_settings ADD COLUMN IF NOT EXISTS about_status_text TEXT DEFAULT 'Open to research opportunities'`);
-    } catch (colErr2) {}
+    const fs = require('fs');
+    const path = require('path');
+    const schemaPath = path.join(__dirname, 'schema.sql');
+    if (fs.existsSync(schemaPath)) {
+      const schemaSql = fs.readFileSync(schemaPath, 'utf8');
+      const statements = schemaSql
+        .split(';')
+        .map((s) => s.trim())
+        .filter(Boolean);
+      for (const stmt of statements) {
+        try {
+          await sql(stmt);
+        } catch (e) {
+          // ignore existing table or constraint errors
+        }
+      }
+    }
   } catch (e) {
-    console.error('Auto-migration error spotlights:', e.message);
-  }
-  try {
-    await sql(`
-      CREATE TABLE IF NOT EXISTS courses (
-        id SERIAL PRIMARY KEY,
-        sort_order INTEGER DEFAULT 0,
-        name TEXT DEFAULT '',
-        institution TEXT DEFAULT '',
-        period TEXT DEFAULT '',
-        role TEXT DEFAULT ''
-      );
-    `);
-  } catch (e) {
-    console.error('Auto-migration error courses:', e.message);
-  }
-  try {
-    await sql(`
-      CREATE TABLE IF NOT EXISTS about_pills (
-        id SERIAL PRIMARY KEY,
-        sort_order INTEGER DEFAULT 0,
-        icon TEXT DEFAULT 'bi-cpu',
-        label TEXT DEFAULT '',
-        color_type TEXT DEFAULT 'primary'
-      );
-    `);
-  } catch (e) {
-    console.error('Auto-migration error about_pills:', e.message);
+    console.error('Schema auto-migration notice:', e.message);
   }
   tablesEnsured = true;
 }
@@ -106,7 +70,14 @@ function buildApp() {
     .split(',')
     .map((s) => s.trim())
     .filter(Boolean)
-    .concat(['https://rashelmahmudrabbi.github.io', 'http://localhost:5500', 'http://127.0.0.1:5500']);
+    .concat([
+      'https://rashelmahmudrabbi.github.io',
+      'http://localhost:5500', 'http://127.0.0.1:5500',
+      'http://localhost:3000', 'http://127.0.0.1:3000',
+      'http://localhost:5173', 'http://127.0.0.1:5173',
+      'http://localhost:8000', 'http://127.0.0.1:8000',
+      'http://localhost:8080', 'http://127.0.0.1:8080',
+    ]);
 
   app.use('/api', cors({
     origin(origin, callback) {
@@ -468,13 +439,13 @@ function buildApp() {
         password_hash TEXT NOT NULL
       )`);
 
-      // Seed admin_users table if empty or if user matches env
+      // Seed admin_users table if empty
       const adminCount = await sql`SELECT count(*) FROM admin_users`;
-      if (adminCount[0].count === '0') {
+      if (!adminCount || Number(adminCount[0]?.count) === 0) {
         const expectedUser = process.env.ADMIN_USERNAME || 'admin';
         const expectedPass = process.env.ADMIN_PASSWORD || 'password';
         const hash = auth.hashPassword(expectedPass);
-        await sql`INSERT INTO admin_users (id, username, password_hash) VALUES (1, ${expectedUser}, ${hash})`;
+        await sql`INSERT INTO admin_users (id, username, password_hash) VALUES (1, ${expectedUser}, ${hash}) ON CONFLICT DO NOTHING`;
       }
 
       if (await auth.checkCredentials(sql, username, password)) {
@@ -522,12 +493,22 @@ function buildApp() {
 
   app.post('/admin/change-password', async (req, res) => {
     const { oldPassword, newPassword, confirmPassword } = req.body;
-    if (newPassword !== confirmPassword) {
+    if (!newPassword || newPassword !== confirmPassword) {
       return res.redirect('/admin/change-password?error=1');
     }
     const sql = getSql();
-    const rows = await sql`SELECT * FROM admin_users LIMIT 1`;
-    if (rows.length === 0 || !auth.verifyPassword(oldPassword, rows[0].password_hash)) {
+    let rows = await sql`SELECT * FROM admin_users LIMIT 1`;
+    if (rows.length === 0) {
+      const expectedPass = process.env.ADMIN_PASSWORD || 'password';
+      if (oldPassword !== expectedPass) {
+        return res.redirect('/admin/change-password?error=1');
+      }
+      const expectedUser = process.env.ADMIN_USERNAME || 'admin';
+      const newHash = auth.hashPassword(newPassword);
+      await sql`INSERT INTO admin_users (id, username, password_hash) VALUES (1, ${expectedUser}, ${newHash})`;
+      return res.redirect('/admin/change-password?success=1');
+    }
+    if (!auth.verifyPassword(oldPassword, rows[0].password_hash)) {
       return res.redirect('/admin/change-password?error=1');
     }
     const newHash = auth.hashPassword(newPassword);
