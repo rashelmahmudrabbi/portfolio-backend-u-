@@ -677,7 +677,8 @@ function buildApp() {
       try {
         const sql = getSql();
         const values = extractValues(resource.fields, req.body);
-        if (req.file) {
+        const hasImageField = resource.fields.some(f => f.key === 'image_file');
+        if (req.file && hasImageField) {
           const b64 = req.file.buffer.toString('base64');
           values.image = `data:${req.file.mimetype};base64,${b64}`;
         }
@@ -711,13 +712,16 @@ function buildApp() {
       try {
         const sql = getSql();
         const values = extractValues(resource.fields, req.body);
-        if (req.file) {
+        const hasImageField = resource.fields.some(f => f.key === 'image_file');
+        if (req.file && hasImageField) {
           const b64 = req.file.buffer.toString('base64');
           values.image = `data:${req.file.mimetype};base64,${b64}`;
-        } else if (!values.image) {
+        } else if (hasImageField && !values.image) {
           // If no new file uploaded and image url is empty, keep existing image
-          const [existing] = await sql(`SELECT image FROM ${resource.table} WHERE id = $1`, [req.params.id]);
-          if (existing && existing.image) values.image = existing.image;
+          try {
+            const [existing] = await sql(`SELECT image FROM ${resource.table} WHERE id = $1`, [req.params.id]);
+            if (existing && existing.image) values.image = existing.image;
+          } catch (imgErr) { /* column may not exist, ignore */ }
         }
         const dbFields = resource.fields.filter(f => f.key !== 'image_file');
         const order = Number(req.body.order) || 0;
