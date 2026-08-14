@@ -321,6 +321,97 @@ const STYLE = `
   .muted { color: var(--text-muted); font-size: 13.5px; }
   form.inline { display: inline; }
   
+  /* Rich Text Editor & Toolbar */
+  .rich-editor-container {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--card-bg);
+    overflow: hidden;
+    margin-top: 6px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+  }
+  .rich-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 10px;
+    background: var(--surface-2);
+    border-bottom: 1px solid var(--border);
+  }
+  .toolbar-group {
+    display: flex;
+    gap: 2px;
+    align-items: center;
+  }
+  .toolbar-divider {
+    width: 1px;
+    height: 18px;
+    background: var(--border);
+    margin: 0 4px;
+  }
+  .toolbar-btn {
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    padding: 3px 6px;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--text-main);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 26px;
+    height: 26px;
+    transition: all 0.15s ease;
+  }
+  .toolbar-btn:hover {
+    background: var(--sidebar-hover);
+    border-color: var(--border);
+    color: var(--primary);
+  }
+  .toolbar-btn:active {
+    background: var(--primary-tint);
+  }
+  .preview-toggle-btn {
+    background: var(--card-bg);
+    border-color: var(--border);
+    font-size: 11.5px;
+    padding: 2px 9px;
+    border-radius: 6px;
+  }
+  .rich-textarea {
+    width: 100% !important;
+    min-height: 140px;
+    border: none !important;
+    border-radius: 0 !important;
+    padding: 12px 14px !important;
+    font-family: inherit;
+    font-size: 13.5px;
+    line-height: 1.6;
+    background: transparent !important;
+    color: var(--text-main);
+    resize: vertical;
+    box-shadow: none !important;
+    outline: none !important;
+  }
+  .rich-preview-pane {
+    min-height: 140px;
+    padding: 14px 16px;
+    background: var(--card-bg);
+    color: var(--text-main);
+    font-size: 13.5px;
+    line-height: 1.65;
+    border-top: 1px solid var(--border);
+  }
+  .rich-preview-pane p { margin-bottom: 0.75rem; }
+  .rich-preview-pane p:last-child { margin-bottom: 0; }
+  .rich-preview-pane ul, .rich-preview-pane ol { margin: 0.4rem 0 0.75rem 1.4rem; }
+  .rich-preview-pane strong, .rich-preview-pane b { font-weight: 700; color: var(--primary); }
+  .rich-preview-pane em, .rich-preview-pane i { font-style: italic; }
+  .rich-preview-pane u { text-decoration: underline; }
+  
   @media(max-width: 900px) {
     aside.admin-sidebar {
       transform: translateX(-100%);
@@ -379,6 +470,141 @@ function layout({ title, authed, body, flash }) {
   function toggleSidebar() {
     const sb = document.querySelector('aside.admin-sidebar');
     if (sb) sb.classList.toggle('open');
+  }
+
+  function getSelectionInfo(textarea) {
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const val = textarea.value;
+    const selected = val.substring(start, end);
+    return { start: start, end: end, val: val, selected: selected };
+  }
+
+  function replaceSelection(textarea, newText, newCursorStart, newCursorEnd) {
+    const s = textarea.selectionStart;
+    const e = textarea.selectionEnd;
+    textarea.setRangeText(newText, s, e, 'select');
+    textarea.focus();
+    if (newCursorStart !== undefined) {
+      textarea.setSelectionRange(newCursorStart, newCursorEnd !== undefined ? newCursorEnd : newCursorStart);
+    }
+  }
+
+  function richFormat(id, type) {
+    const ta = document.getElementById(id);
+    if (!ta) return;
+    const info = getSelectionInfo(ta);
+    const start = info.start;
+    const selected = info.selected;
+    
+    if (type === 'bold') {
+      const text = selected || 'bold text';
+      replaceSelection(ta, '<strong>' + text + '</strong>', start + 8, start + 8 + text.length);
+    } else if (type === 'italic') {
+      const text = selected || 'italic text';
+      replaceSelection(ta, '<em>' + text + '</em>', start + 4, start + 4 + text.length);
+    } else if (type === 'underline') {
+      const text = selected || 'underlined text';
+      replaceSelection(ta, '<u>' + text + '</u>', start + 3, start + 3 + text.length);
+    } else if (type === 'strike') {
+      const text = selected || 'strikethrough text';
+      replaceSelection(ta, '<s>' + text + '</s>', start + 3, start + 3 + text.length);
+    } else if (type === 'p') {
+      const text = selected || 'Paragraph text...';
+      replaceSelection(ta, '<p>' + text + '</p>', start + 3, start + 3 + text.length);
+    } else if (type === 'h4') {
+      const text = selected || 'Subheading';
+      replaceSelection(ta, '<h4>' + text + '</h4>', start + 4, start + 4 + text.length);
+    } else if (type === 'ul') {
+      let items = selected ? selected.split('\n').filter(Boolean) : [];
+      if (items.length === 0) items = ['First bullet item', 'Second bullet item'];
+      const lis = items.map(function(it) { return '  <li>' + it.replace(/^\s*[-*•]\s*/, '') + '</li>'; }).join('\n');
+      const replacement = '<ul>\n' + lis + '\n</ul>';
+      replaceSelection(ta, replacement, start + 4, start + replacement.length - 6);
+    } else if (type === 'ol') {
+      let items = selected ? selected.split('\n').filter(Boolean) : [];
+      if (items.length === 0) items = ['First step', 'Second step'];
+      const lis = items.map(function(it) { return '  <li>' + it.replace(/^\s*\d+[.)]\s*/, '') + '</li>'; }).join('\n');
+      const replacement = '<ol>\n' + lis + '\n</ol>';
+      replaceSelection(ta, replacement, start + 4, start + replacement.length - 6);
+    }
+  }
+
+  function richAlign(id, align) {
+    const ta = document.getElementById(id);
+    if (!ta) return;
+    const info = getSelectionInfo(ta);
+    const start = info.start;
+    const selected = info.selected;
+    const text = selected || 'Aligned text...';
+    const tag = '<p style="text-align: ' + align + ';">' + text + '</p>';
+    replaceSelection(ta, tag, start + tag.indexOf('>') + 1, start + tag.indexOf('>') + 1 + text.length);
+  }
+
+  function richInsertLink(id) {
+    const ta = document.getElementById(id);
+    if (!ta) return;
+    const info = getSelectionInfo(ta);
+    const start = info.start;
+    const selected = info.selected;
+    const url = prompt('Enter URL (e.g. https://...):', 'https://');
+    if (!url) return;
+    const label = selected || prompt('Enter link text:', 'Link text') || url;
+    const tag = '<a href="' + url + '" target="_blank" rel="noopener noreferrer">' + label + '</a>';
+    replaceSelection(ta, tag, start, start + tag.length);
+  }
+
+  function richClearFormat(id) {
+    const ta = document.getElementById(id);
+    if (!ta) return;
+    const info = getSelectionInfo(ta);
+    const start = info.start;
+    const selected = info.selected;
+    if (!selected) {
+      if (confirm('Clear all HTML formatting tags in this field?')) {
+        ta.value = ta.value.replace(/<[^>]*>/g, '');
+      }
+      return;
+    }
+    const clean = selected.replace(/<[^>]*>/g, '');
+    replaceSelection(ta, clean, start, start + clean.length);
+  }
+
+  function handleRichKeydown(e, id) {
+    if (e.ctrlKey || e.metaKey) {
+      if (e.key === 'b' || e.key === 'B') {
+        e.preventDefault();
+        richFormat(id, 'bold');
+      } else if (e.key === 'i' || e.key === 'I') {
+        e.preventDefault();
+        richFormat(id, 'italic');
+      } else if (e.key === 'u' || e.key === 'U') {
+        e.preventDefault();
+        richFormat(id, 'underline');
+      }
+    }
+  }
+
+  function toggleRichPreview(id) {
+    const ta = document.getElementById(id);
+    const prev = document.getElementById('preview_' + id);
+    const btn = document.getElementById('btn_preview_' + id);
+    if (!ta || !prev) return;
+    const isShowing = prev.style.display !== 'none';
+    if (isShowing) {
+      prev.style.display = 'none';
+      ta.style.display = 'block';
+      if (btn) btn.innerHTML = '<i class="bi bi-eye"></i> Preview';
+    } else {
+      let raw = ta.value;
+      if (!raw.includes('<p>') && !raw.includes('<br>') && !raw.includes('<ul>') && !raw.includes('<ol>')) {
+        raw = raw.split(/\n\s*\n/).map(function(p) { return '<p>' + p.replace(/\n/g, '<br/>') + '</p>'; }).join('');
+      }
+      prev.innerHTML = raw || '<p class="muted"><i>(Empty content)</i></p>';
+      ta.style.display = 'none';
+      prev.style.display = 'block';
+      if (btn) btn.innerHTML = '<i class="bi bi-pencil"></i> Edit';
+    }
   }
 </script>
 </head>
@@ -482,10 +708,50 @@ ${authed ? `
 </html>`;
 }
 
+function richTextarea(name, label, value, customId) {
+  const v = value === undefined || value === null ? '' : value;
+  const id = customId || `rich_${name.replace(/[^a-zA-Z0-9_]/g, '_')}`;
+  return `
+  <div class="rich-editor-container" data-editor-id="${id}">
+    <div class="rich-toolbar">
+      <div class="toolbar-group">
+        <button type="button" class="toolbar-btn" onclick="richFormat('${id}', 'bold')" title="Bold (Ctrl+B)"><i class="bi bi-type-bold"></i></button>
+        <button type="button" class="toolbar-btn" onclick="richFormat('${id}', 'italic')" title="Italic (Ctrl+I)"><i class="bi bi-type-italic"></i></button>
+        <button type="button" class="toolbar-btn" onclick="richFormat('${id}', 'underline')" title="Underline (Ctrl+U)"><i class="bi bi-type-underline"></i></button>
+        <button type="button" class="toolbar-btn" onclick="richFormat('${id}', 'strike')" title="Strikethrough"><i class="bi bi-type-strikethrough"></i></button>
+      </div>
+      <div class="toolbar-divider"></div>
+      <div class="toolbar-group">
+        <button type="button" class="toolbar-btn" onclick="richFormat('${id}', 'p')" title="Paragraph">&lt;p&gt;</button>
+        <button type="button" class="toolbar-btn" onclick="richFormat('${id}', 'h4')" title="Heading 4">H4</button>
+        <button type="button" class="toolbar-btn" onclick="richFormat('${id}', 'ul')" title="Bullet List"><i class="bi bi-list-ul"></i></button>
+        <button type="button" class="toolbar-btn" onclick="richFormat('${id}', 'ol')" title="Numbered List"><i class="bi bi-list-ol"></i></button>
+      </div>
+      <div class="toolbar-divider"></div>
+      <div class="toolbar-group">
+        <button type="button" class="toolbar-btn" onclick="richAlign('${id}', 'left')" title="Align Left"><i class="bi bi-text-left"></i></button>
+        <button type="button" class="toolbar-btn" onclick="richAlign('${id}', 'center')" title="Align Center"><i class="bi bi-text-center"></i></button>
+        <button type="button" class="toolbar-btn" onclick="richAlign('${id}', 'right')" title="Align Right"><i class="bi bi-text-right"></i></button>
+        <button type="button" class="toolbar-btn" onclick="richAlign('${id}', 'justify')" title="Justify Full Text"><i class="bi bi-justify"></i></button>
+      </div>
+      <div class="toolbar-divider"></div>
+      <div class="toolbar-group">
+        <button type="button" class="toolbar-btn" onclick="richInsertLink('${id}')" title="Insert Link"><i class="bi bi-link-45deg"></i></button>
+        <button type="button" class="toolbar-btn" onclick="richClearFormat('${id}')" title="Clear Formatting"><i class="bi bi-eraser"></i></button>
+      </div>
+      <div class="toolbar-group" style="margin-left: auto;">
+        <button type="button" class="toolbar-btn preview-toggle-btn" id="btn_preview_${id}" onclick="toggleRichPreview('${id}')" title="Toggle Live Preview"><i class="bi bi-eye"></i> Preview</button>
+      </div>
+    </div>
+    <textarea id="${id}" name="${esc(name)}" class="rich-textarea" onkeydown="handleRichKeydown(event, '${id}')" placeholder="Type text or use the formatting toolbar above...">${esc(v)}</textarea>
+    <div id="preview_${id}" class="rich-preview-pane" style="display:none;"></div>
+  </div>`;
+}
+
 function fieldInput(field, value) {
   const v = value === undefined || value === null ? '' : value;
-  if (field.type === 'textarea') {
-    return `<textarea name="${esc(field.key)}">${esc(v)}</textarea>`;
+  if (field.type === 'textarea' || field.type === 'richtext') {
+    return richTextarea(field.key, field.label, v);
   }
   if (field.type === 'checkbox') {
     return `<div class="checkbox-row"><input type="checkbox" id="${esc(field.key)}" name="${esc(field.key)}" ${v ? 'checked' : ''} /><label style="margin:0;" for="${esc(field.key)}">${esc(field.label)}</label></div>`;
@@ -635,16 +901,9 @@ function renderAboutAdmin({ settings = {}, pills = [] }) {
       </div>
 
       <div style="margin-bottom:18px;">
-        <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:6px;">
-          <label style="font-weight:600; margin:0;">Body Text & Paragraphs (Supports Rich Formatting)</label>
-          <div style="display:flex; gap:6px;">
-            <button type="button" class="btn secondary" style="padding:2px 10px; font-size:12px; font-weight:bold;" onclick="wrapFormat('strong')" title="Bold"><b>B</b></button>
-            <button type="button" class="btn secondary" style="padding:2px 10px; font-size:12px; font-style:italic;" onclick="wrapFormat('em')" title="Italic"><i>I</i></button>
-            <button type="button" class="btn secondary" style="padding:2px 10px; font-size:12px;" onclick="wrapFormat('p')" title="Paragraph">&lt;p&gt;</button>
-          </div>
-        </div>
-        <textarea id="aboutBodyArea" name="about_text" style="width:100%; min-height:220px; font-family:inherit; font-size:14.5px; line-height:1.6;" placeholder="Separate paragraphs with an empty line, or use <strong>bold</strong> and <em>italic</em> formatting.">${esc(settings.about_text || '')}</textarea>
-        <small class="muted" style="display:block; margin-top:6px;">Tip: Leave empty to automatically use the default 3-paragraph executive narrative, or type your own custom paragraphs with <b>bold</b> and <i>italic</i> styling.</small>
+        <label style="font-weight:600; margin-bottom:6px; display:block;">Body Text & Paragraphs (Rich Formatting Toolbar)</label>
+        ${richTextarea('about_text', 'Body Text', settings.about_text, 'aboutBodyArea')}
+        <small class="muted" style="display:block; margin-top:6px;">Tip: Use the toolbar buttons above for <b>Bold</b>, <i>Italic</i>, <u>Underline</u>, <b>Lists</b>, and <b>Justify</b>. Leave empty to use the default 3-paragraph executive narrative.</small>
       </div>
 
       <div class="actions">
