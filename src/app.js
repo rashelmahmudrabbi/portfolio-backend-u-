@@ -659,7 +659,9 @@ function buildApp() {
         const sql = getSql();
         const values = extractValues(resource.fields, req.body);
         const hasImageField = resource.fields.some(f => f.key === 'image_file');
-        if (req.file && hasImageField) {
+        if (req.body.image_file_b64) {
+          values.image = req.body.image_file_b64;
+        } else if (req.file && hasImageField) {
           const b64 = req.file.buffer.toString('base64');
           values.image = `data:${req.file.mimetype};base64,${b64}`;
         }
@@ -694,7 +696,9 @@ function buildApp() {
         const sql = getSql();
         const values = extractValues(resource.fields, req.body);
         const hasImageField = resource.fields.some(f => f.key === 'image_file');
-        if (req.file && hasImageField) {
+        if (req.body.image_file_b64) {
+          values.image = req.body.image_file_b64;
+        } else if (req.file && hasImageField) {
           const b64 = req.file.buffer.toString('base64');
           values.image = `data:${req.file.mimetype};base64,${b64}`;
         } else if (hasImageField && !values.image) {
@@ -781,7 +785,7 @@ function buildApp() {
     try {
       const sql = getSql();
       const order = Number(req.body.order) || 0;
-      let dataUri = req.body.src || '';
+      let dataUri = req.body.src || req.body.photo_file_b64 || '';
       if (req.file && !dataUri) {
         const b64 = req.file.buffer.toString('base64');
         dataUri = `data:${req.file.mimetype};base64,${b64}`;
@@ -814,10 +818,11 @@ function buildApp() {
       const sql = getSql();
       const order = Number(req.body.order) || 0;
       
-      if (req.body.src) {
+      const src = req.body.src || req.body.photo_file_b64;
+      if (src) {
         await sql(
           `UPDATE gallery_photos SET sort_order = $1, src = $2, caption = $3 WHERE id = $4`,
-          [order, req.body.src, req.body.caption || '', req.params.photoId]
+          [order, src, req.body.caption || '', req.params.photoId]
         );
       } else if (req.file) {
         const b64 = req.file.buffer.toString('base64');
@@ -942,7 +947,9 @@ function buildApp() {
       await ensureTables(sql);
       const values = extractValues(SETTINGS_FIELDS, req.body);
       
-      if (req.file) {
+      if (req.body.avatar_file_b64) {
+        values.avatar = req.body.avatar_file_b64;
+      } else if (req.file) {
         const b64 = req.file.buffer.toString('base64');
         values.avatar = `data:${req.file.mimetype};base64,${b64}`;
       } else if (!values.avatar) {

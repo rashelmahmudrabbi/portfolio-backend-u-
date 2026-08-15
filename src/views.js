@@ -589,6 +589,77 @@ function layout({ title, authed, body, flash }) {
       if (btnPreview) btnPreview.classList.add('active');
     }
   }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('form').forEach(form => {
+      form.addEventListener('submit', async (e) => {
+        const fileInputs = Array.from(form.querySelectorAll('input[type="file"]'));
+        let needsCompression = false;
+        
+        for (const input of fileInputs) {
+          if (input.files && input.files.length > 0) {
+            const file = input.files[0];
+            if (file.type.startsWith('image/') && file.size > 1.5 * 1024 * 1024) {
+              needsCompression = true;
+            }
+          }
+        }
+        
+        if (!needsCompression || form.dataset.compressed === 'true') return;
+        
+        e.preventDefault();
+        const submitBtn = form.querySelector('button[type="submit"]');
+        const oldText = submitBtn ? submitBtn.innerText : 'Save';
+        if (submitBtn) { submitBtn.innerText = 'Compressing...'; submitBtn.disabled = true; }
+        
+        try {
+          for (const input of fileInputs) {
+            if (input.files && input.files.length > 0) {
+              const file = input.files[0];
+              if (file.type.startsWith('image/') && file.size > 1.5 * 1024 * 1024) {
+                const dataUrl = await new Promise((resolve) => {
+                  const reader = new FileReader();
+                  reader.onload = (ev) => {
+                    const img = new Image();
+                    img.onload = () => {
+                      const canvas = document.createElement('canvas');
+                      let width = img.width; let height = img.height;
+                      const maxDim = 1600;
+                      if (width > maxDim || height > maxDim) {
+                        if (width > height) { height *= maxDim / width; width = maxDim; }
+                        else { width *= maxDim / height; height = maxDim; }
+                      }
+                      canvas.width = width; canvas.height = height;
+                      const ctx = canvas.getContext('2d');
+                      ctx.drawImage(img, 0, 0, width, height);
+                      resolve(canvas.toDataURL('image/jpeg', 0.8));
+                    };
+                    img.src = ev.target.result;
+                  };
+                  reader.readAsDataURL(file);
+                });
+                
+                const hiddenInput = document.createElement('input');
+                hiddenInput.type = 'hidden';
+                hiddenInput.name = input.name + '_b64';
+                hiddenInput.value = dataUrl;
+                form.appendChild(hiddenInput);
+                
+                // Remove name so the heavy file is NOT uploaded
+                input.removeAttribute('name');
+              }
+            }
+          }
+          form.dataset.compressed = 'true';
+          form.submit();
+        } catch (err) {
+          console.error(err);
+          if (submitBtn) { submitBtn.innerText = oldText; submitBtn.disabled = false; }
+          alert('Failed to compress image.');
+        }
+      });
+    });
+  });
 </script>
 </head>
 <body>
