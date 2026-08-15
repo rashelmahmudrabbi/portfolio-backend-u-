@@ -736,12 +736,9 @@ function buildApp() {
       );
       const rows = photos
         .map((p) => `<tr>
-          <td>${esc(p.src)}</td><td>${esc(p.caption)}</td><td>${p.sort_order}</td>
+          <td>${esc(p.caption)}</td><td>${p.sort_order}</td>
           <td style="white-space:nowrap;">
             <a class="link" href="/admin/gallery/${event.id}/photos/${p.id}/edit">Edit</a>
-            <form class="inline" method="post" action="/admin/gallery/${event.id}/photos/${p.id}/delete" onsubmit="return confirm('Delete this photo?');">
-              <button class="link" style="background:none;border:none;color:#dc2626;cursor:pointer;padding:0;">Delete</button>
-            </form>
           </td>
         </tr>`)
         .join('');
@@ -755,8 +752,8 @@ function buildApp() {
               <a class="btn" href="/admin/gallery/${event.id}/photos/new">+ Add photo</a>
             </div>
             <table>
-              <thead><tr><th>Src</th><th>Caption</th><th>Order</th><th></th></tr></thead>
-              <tbody>${rows || '<tr><td colspan="4" class="muted">No photos yet.</td></tr>'}</tbody>
+              <thead><tr><th>Caption</th><th>Order</th><th></th></tr></thead>
+              <tbody>${rows || '<tr><td colspan="3" class="muted">No photos yet.</td></tr>'}</tbody>
             </table>
           </div>`,
       }));
