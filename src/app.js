@@ -739,6 +739,9 @@ function buildApp() {
           <td>${esc(p.caption)}</td><td>${p.sort_order}</td>
           <td style="white-space:nowrap;">
             <a class="link" href="/admin/gallery/${event.id}/photos/${p.id}/edit">Edit</a>
+            <form class="inline" method="post" action="/admin/gallery/${event.id}/photos/${p.id}/delete" onsubmit="return confirm('Delete this photo?');">
+              <button class="link" style="background:none;border:none;color:#dc2626;cursor:pointer;padding:0;">Delete</button>
+            </form>
           </td>
         </tr>`)
         .join('');
