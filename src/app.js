@@ -781,8 +781,8 @@ function buildApp() {
     try {
       const sql = getSql();
       const order = Number(req.body.order) || 0;
-      let dataUri = '';
-      if (req.file) {
+      let dataUri = req.body.src || '';
+      if (req.file && !dataUri) {
         const b64 = req.file.buffer.toString('base64');
         dataUri = `data:${req.file.mimetype};base64,${b64}`;
       }
@@ -814,7 +814,12 @@ function buildApp() {
       const sql = getSql();
       const order = Number(req.body.order) || 0;
       
-      if (req.file) {
+      if (req.body.src) {
+        await sql(
+          `UPDATE gallery_photos SET sort_order = $1, src = $2, caption = $3 WHERE id = $4`,
+          [order, req.body.src, req.body.caption || '', req.params.photoId]
+        );
+      } else if (req.file) {
         const b64 = req.file.buffer.toString('base64');
         const dataUri = `data:${req.file.mimetype};base64,${b64}`;
         await sql(
@@ -1097,6 +1102,7 @@ function extractValues(fields, body) {
 }
 
 const PHOTO_FIELDS = [
+  { key: 'src', label: 'Image URL/Path (Overrides upload)', type: 'text' },
   { key: 'photo_file', label: 'Upload Photo (leaves existing if empty)', type: 'file' },
   { key: 'caption', label: 'Caption', type: 'text' },
 ];
