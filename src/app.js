@@ -749,6 +749,7 @@ function buildApp() {
       );
       const rows = photos
         .map((p) => `<tr>
+          <td style="width: 60px;"><img src="${esc(p.src)}" alt="Thumbnail" style="height: 48px; width: 48px; object-fit: cover; border-radius: 4px; display: block; background: var(--surface-2);" /></td>
           <td>${esc(p.caption)}</td>
           <td>
             <form method="post" action="/admin/gallery/${event.id}/photos/${p.id}/reorder" class="inline" style="margin:0;">
@@ -773,8 +774,8 @@ function buildApp() {
               <a class="btn" href="/admin/gallery/${event.id}/photos/new">+ Add photo</a>
             </div>
             <table>
-              <thead><tr><th>Caption</th><th>Order</th><th></th></tr></thead>
-              <tbody>${rows || '<tr><td colspan="3" class="muted">No photos yet.</td></tr>'}</tbody>
+              <thead><tr><th>Image</th><th>Caption</th><th>Order</th><th></th></tr></thead>
+              <tbody>${rows || '<tr><td colspan="4" class="muted">No photos yet.</td></tr>'}</tbody>
             </table>
           </div>`,
       }));
