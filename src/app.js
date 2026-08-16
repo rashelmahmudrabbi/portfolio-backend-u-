@@ -274,7 +274,7 @@ function buildApp() {
         spotlights: spotRows.map((r) => serializeRow('spotlights', r)),
         courses: courseRows.map((r) => serializeRow('courses', r)),
         gallery: galleryEvents.map((e) => ({
-          id: e.id, title: e.title, year: e.year, order: e.sort_order,
+          id: e.id, title: e.title, year: e.year, category: e.category, venue: e.venue, date: e.date, order: e.sort_order,
           photos: byEvent[e.id] || [],
         })),
         references: refRows.map((r) => serializeRow('references', r)),
@@ -359,7 +359,7 @@ function buildApp() {
         (byEvent[p.event_id] = byEvent[p.event_id] || []).push({ src: p.src, caption: p.caption });
       }
       res.json(events.map((e) => ({
-        id: e.id, title: e.title, year: e.year, order: e.sort_order,
+        id: e.id, title: e.title, year: e.year, category: e.category, venue: e.venue, date: e.date, order: e.sort_order,
         photos: byEvent[e.id] || [],
       })));
     } catch (err) { next(err); }
@@ -372,7 +372,7 @@ function buildApp() {
       if (!e) return res.status(404).json({ detail: 'Not found.' });
       const photos = await sql`SELECT * FROM gallery_photos WHERE event_id = ${e.id} ORDER BY sort_order ASC, id ASC`;
       res.json({
-        id: e.id, title: e.title, year: e.year, order: e.sort_order,
+        id: e.id, title: e.title, year: e.year, category: e.category, venue: e.venue, date: e.date, order: e.sort_order,
         photos: photos.map((p) => ({ src: p.src, caption: p.caption })),
       });
     } catch (err) { next(err); }
@@ -726,6 +726,15 @@ function buildApp() {
         res.redirect(`/admin/${key}`);
       } catch (err) { next(err); }
     });
+
+    app.post(`/admin/${key}/:id/reorder`, async (req, res, next) => {
+      try {
+        const sql = getSql();
+        const order = Number(req.body.order) || 0;
+        await sql(`UPDATE ${resource.table} SET sort_order = $1 WHERE id = $2`, [order, req.params.id]);
+        res.redirect(`/admin/${key}`);
+      } catch (err) { next(err); }
+    });
   }
 
   // --- Gallery photos (nested under an event) ---
@@ -740,7 +749,12 @@ function buildApp() {
       );
       const rows = photos
         .map((p) => `<tr>
-          <td>${esc(p.caption)}</td><td>${p.sort_order}</td>
+          <td>${esc(p.caption)}</td>
+          <td>
+            <form method="post" action="/admin/gallery/${event.id}/photos/${p.id}/reorder" class="inline" style="margin:0;">
+              <input type="number" name="order" value="${p.sort_order ?? 0}" style="width: 70px; padding: 4px; text-align: center;" onchange="this.form.submit()" />
+            </form>
+          </td>
           <td style="white-space:nowrap;">
             <a class="link" href="/admin/gallery/${event.id}/photos/${p.id}/edit">Edit</a>
             <form class="inline" method="post" action="/admin/gallery/${event.id}/photos/${p.id}/delete" onsubmit="return confirm('Delete this photo?');">
@@ -846,6 +860,15 @@ function buildApp() {
     try {
       const sql = getSql();
       await sql(`DELETE FROM gallery_photos WHERE id = $1`, [req.params.photoId]);
+      res.redirect(`/admin/gallery/${req.params.id}/photos`);
+    } catch (err) { next(err); }
+  });
+
+  app.post('/admin/gallery/:id/photos/:photoId/reorder', async (req, res, next) => {
+    try {
+      const sql = getSql();
+      const order = Number(req.body.order) || 0;
+      await sql(`UPDATE gallery_photos SET sort_order = $1 WHERE id = $2`, [order, req.params.photoId]);
       res.redirect(`/admin/gallery/${req.params.id}/photos`);
     } catch (err) { next(err); }
   });
@@ -990,6 +1013,9 @@ function buildApp() {
   const NEW_GALLERY_EVENT_FIELDS = [
     { key: 'title', label: 'Title', type: 'text' },
     { key: 'year', label: 'Year', type: 'text' },
+    { key: 'category', label: 'Category (Optional)', type: 'text' },
+    { key: 'venue', label: 'Venue (Optional)', type: 'text' },
+    { key: 'date', label: 'Date (Optional)', type: 'text' },
     { key: 'photo_file', label: 'Upload Initial Photo (Optional)', type: 'file' },
     { key: 'photo_caption', label: 'Initial Photo Caption (Optional)', type: 'text' },
   ];
@@ -1008,8 +1034,8 @@ function buildApp() {
       const sql = getSql();
       const order = Number(req.body.order) || 0;
       const rows = await sql(
-        `INSERT INTO gallery_events (sort_order, title, year) VALUES ($1, $2, $3) RETURNING id`,
-        [order, req.body.title || '', req.body.year || '']
+        `INSERT INTO gallery_events (sort_order, title, year, category, venue, date) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`,
+        [order, req.body.title || '', req.body.year || '', req.body.category || '', req.body.venue || '', req.body.date || '']
       );
       
       const eventId = rows[0].id;
@@ -1030,6 +1056,9 @@ function buildApp() {
   const EDIT_GALLERY_EVENT_FIELDS = [
     { key: 'title', label: 'Title', type: 'text' },
     { key: 'year', label: 'Year', type: 'text' },
+    { key: 'category', label: 'Category (Optional)', type: 'text' },
+    { key: 'venue', label: 'Venue (Optional)', type: 'text' },
+    { key: 'date', label: 'Date (Optional)', type: 'text' },
     { key: 'photo_file', label: 'Upload an additional Photo (Optional)', type: 'file' },
     { key: 'photo_caption', label: 'New Photo Caption (Optional)', type: 'text' },
   ];
@@ -1053,8 +1082,8 @@ function buildApp() {
       const sql = getSql();
       const order = Number(req.body.order) || 0;
       await sql(
-        `UPDATE gallery_events SET sort_order = $1, title = $2, year = $3 WHERE id = $4`,
-        [order, req.body.title || '', req.body.year || '', req.params.id]
+        `UPDATE gallery_events SET sort_order = $1, title = $2, year = $3, category = $4, venue = $5, date = $6 WHERE id = $7`,
+        [order, req.body.title || '', req.body.year || '', req.body.category || '', req.body.venue || '', req.body.date || '', req.params.id]
       );
       
       if (req.file) {
@@ -1074,6 +1103,15 @@ function buildApp() {
     try {
       const sql = getSql();
       await sql(`DELETE FROM gallery_events WHERE id = $1`, [req.params.id]);
+      res.redirect('/admin/gallery');
+    } catch (err) { next(err); }
+  });
+
+  app.post('/admin/gallery/:id/reorder', async (req, res, next) => {
+    try {
+      const sql = getSql();
+      const order = Number(req.body.order) || 0;
+      await sql(`UPDATE gallery_events SET sort_order = $1 WHERE id = $2`, [order, req.params.id]);
       res.redirect('/admin/gallery');
     } catch (err) { next(err); }
   });
@@ -1117,6 +1155,9 @@ const PHOTO_FIELDS = [
 const GALLERY_EVENT_FIELDS = [
   { key: 'title', label: 'Title', type: 'text' },
   { key: 'year', label: 'Year', type: 'text' },
+  { key: 'category', label: 'Category', type: 'text' },
+  { key: 'venue', label: 'Venue', type: 'text' },
+  { key: 'date', label: 'Date', type: 'text' },
 ];
 
 const SETTINGS_FIELDS = [

@@ -185,7 +185,10 @@ CREATE TABLE IF NOT EXISTS gallery_events (
   id SERIAL PRIMARY KEY,
   sort_order INTEGER DEFAULT 0,
   title TEXT DEFAULT '',
-  year TEXT DEFAULT ''
+  year TEXT DEFAULT '',
+  category TEXT DEFAULT '',
+  venue TEXT DEFAULT '',
+  date TEXT DEFAULT ''
 );
 
 CREATE TABLE IF NOT EXISTS gallery_photos (
@@ -230,3 +233,7 @@ CREATE TABLE IF NOT EXISTS reference_list (
 );
 
 CREATE INDEX IF NOT EXISTS idx_gallery_photos_event_id ON gallery_photos(event_id);
+
+ALTER TABLE gallery_events ADD COLUMN category TEXT DEFAULT '';
+ALTER TABLE gallery_events ADD COLUMN venue TEXT DEFAULT '';
+ALTER TABLE gallery_events ADD COLUMN date TEXT DEFAULT '';

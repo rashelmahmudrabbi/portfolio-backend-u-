@@ -892,7 +892,11 @@ function renderTable({ resourceKey, label, fields, rows, extraCol }) {
         .join('');
       return `<tr>
         ${cells}
-        <td>${r.sort_order ?? 0}</td>
+        <td>
+          <form method="post" action="/admin/${esc(resourceKey)}/${r.id}/reorder" class="inline" style="margin:0;">
+            <input type="number" name="order" value="${r.sort_order ?? 0}" style="width: 70px; padding: 4px; text-align: center;" onchange="this.form.submit()" />
+          </form>
+        </td>
         <td style="white-space:nowrap; text-align: right;">
           ${extraCol ? extraCol(r) : ''}
           <a class="link" href="/admin/${esc(resourceKey)}/${r.id}/edit">Edit</a>
@@ -946,7 +950,11 @@ function renderAboutAdmin({ settings = {}, pills = [] }) {
       <td><i class="bi ${esc(p.icon || 'bi-cpu')} text-${esc(p.color_type || 'primary')}" style="font-size:18px;"></i> <code>${esc(p.icon || 'bi-cpu')}</code></td>
       <td><strong>${esc(p.label)}</strong></td>
       <td><span class="badge" style="text-transform:capitalize; padding:3px 8px; border-radius:12px; background:var(--primary-tint); font-size:11px;">${esc(p.color_type || 'primary')}</span></td>
-      <td>${p.sort_order ?? 0}</td>
+      <td>
+        <form method="post" action="/admin/about-pills/${p.id}/reorder" class="inline" style="margin:0;">
+          <input type="number" name="order" value="${p.sort_order ?? 0}" style="width: 70px; padding: 4px; text-align: center;" onchange="this.form.submit()" />
+        </form>
+      </td>
       <td style="text-align:right; white-space:nowrap;">
         <a class="link" href="/admin/about-pills/${p.id}/edit">Edit</a>
         <form class="inline" method="post" action="/admin/about-pills/${p.id}/delete" onsubmit="return confirm('Delete this pill?');">
