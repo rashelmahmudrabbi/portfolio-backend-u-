@@ -176,29 +176,48 @@ function buildApp() {
       const sql = getSql();
       await ensureTables(sql);
 
-      // Fire all queries in parallel
-      const [settingsRow, interests, langs, roles, areas,
-             eduRows, expRows, pubRows, projRows, certRows,
-             awardRows, actRows, galleryEvents, galleryPhotos, refRows, spotRows, courseRows, pillRows] = await Promise.all([
-        sql`SELECT * FROM site_settings WHERE id = 1`,
-        sql`SELECT * FROM research_interests ORDER BY sort_order ASC, id ASC`,
-        sql`SELECT * FROM spoken_languages ORDER BY sort_order ASC, id ASC`,
-        sql`SELECT * FROM teaching_roles ORDER BY sort_order ASC, id ASC`,
-        sql`SELECT * FROM teaching_areas ORDER BY sort_order ASC, id ASC`,
-        sql`SELECT * FROM education ORDER BY sort_order ASC, id ASC`,
-        sql`SELECT * FROM experience ORDER BY sort_order ASC, id ASC`,
-        sql`SELECT * FROM publications ORDER BY sort_order ASC, id ASC`,
-        sql`SELECT * FROM projects ORDER BY sort_order ASC, id ASC`,
-        sql`SELECT * FROM certifications ORDER BY sort_order ASC, id ASC`,
-        sql`SELECT * FROM awards ORDER BY sort_order ASC, id ASC`,
-        sql`SELECT * FROM activities ORDER BY sort_order ASC, id ASC`,
-        sql`SELECT * FROM gallery_events ORDER BY sort_order ASC, id ASC`,
-        sql`SELECT * FROM gallery_photos ORDER BY sort_order ASC, id ASC`,
-        sql`SELECT * FROM reference_list ORDER BY sort_order ASC, id ASC`,
-        sql`SELECT * FROM spotlights ORDER BY sort_order ASC, id ASC`,
-        sql`SELECT * FROM courses ORDER BY sort_order ASC, id ASC`,
-        sql`SELECT * FROM about_pills ORDER BY sort_order ASC, id ASC`,
-      ]);
+      // Fetch everything in a single roundtrip using JSON aggregation.
+      // This eliminates the overhead of 18 concurrent HTTP requests to the database.
+      const [allData] = await sql`
+        SELECT
+          (SELECT json_agg(t) FROM (SELECT * FROM site_settings WHERE id = 1) t) AS "settingsRow",
+          (SELECT COALESCE(json_agg(t), '[]'::json) FROM (SELECT * FROM research_interests ORDER BY sort_order ASC, id ASC) t) AS "interests",
+          (SELECT COALESCE(json_agg(t), '[]'::json) FROM (SELECT * FROM spoken_languages ORDER BY sort_order ASC, id ASC) t) AS "langs",
+          (SELECT COALESCE(json_agg(t), '[]'::json) FROM (SELECT * FROM teaching_roles ORDER BY sort_order ASC, id ASC) t) AS "roles",
+          (SELECT COALESCE(json_agg(t), '[]'::json) FROM (SELECT * FROM teaching_areas ORDER BY sort_order ASC, id ASC) t) AS "areas",
+          (SELECT COALESCE(json_agg(t), '[]'::json) FROM (SELECT * FROM education ORDER BY sort_order ASC, id ASC) t) AS "eduRows",
+          (SELECT COALESCE(json_agg(t), '[]'::json) FROM (SELECT * FROM experience ORDER BY sort_order ASC, id ASC) t) AS "expRows",
+          (SELECT COALESCE(json_agg(t), '[]'::json) FROM (SELECT * FROM publications ORDER BY sort_order ASC, id ASC) t) AS "pubRows",
+          (SELECT COALESCE(json_agg(t), '[]'::json) FROM (SELECT * FROM projects ORDER BY sort_order ASC, id ASC) t) AS "projRows",
+          (SELECT COALESCE(json_agg(t), '[]'::json) FROM (SELECT * FROM certifications ORDER BY sort_order ASC, id ASC) t) AS "certRows",
+          (SELECT COALESCE(json_agg(t), '[]'::json) FROM (SELECT * FROM awards ORDER BY sort_order ASC, id ASC) t) AS "awardRows",
+          (SELECT COALESCE(json_agg(t), '[]'::json) FROM (SELECT * FROM activities ORDER BY sort_order ASC, id ASC) t) AS "actRows",
+          (SELECT COALESCE(json_agg(t), '[]'::json) FROM (SELECT * FROM gallery_events ORDER BY sort_order ASC, id ASC) t) AS "galleryEvents",
+          (SELECT COALESCE(json_agg(t), '[]'::json) FROM (SELECT * FROM gallery_photos ORDER BY sort_order ASC, id ASC) t) AS "galleryPhotos",
+          (SELECT COALESCE(json_agg(t), '[]'::json) FROM (SELECT * FROM reference_list ORDER BY sort_order ASC, id ASC) t) AS "refRows",
+          (SELECT COALESCE(json_agg(t), '[]'::json) FROM (SELECT * FROM spotlights ORDER BY sort_order ASC, id ASC) t) AS "spotRows",
+          (SELECT COALESCE(json_agg(t), '[]'::json) FROM (SELECT * FROM courses ORDER BY sort_order ASC, id ASC) t) AS "courseRows",
+          (SELECT COALESCE(json_agg(t), '[]'::json) FROM (SELECT * FROM about_pills ORDER BY sort_order ASC, id ASC) t) AS "pillRows"
+      `;
+
+      const settingsRow = allData.settingsRow || [];
+      const interests = allData.interests || [];
+      const langs = allData.langs || [];
+      const roles = allData.roles || [];
+      const areas = allData.areas || [];
+      const eduRows = allData.eduRows || [];
+      const expRows = allData.expRows || [];
+      const pubRows = allData.pubRows || [];
+      const projRows = allData.projRows || [];
+      const certRows = allData.certRows || [];
+      const awardRows = allData.awardRows || [];
+      const actRows = allData.actRows || [];
+      const galleryEvents = allData.galleryEvents || [];
+      const galleryPhotos = allData.galleryPhotos || [];
+      const refRows = allData.refRows || [];
+      const spotRows = allData.spotRows || [];
+      const courseRows = allData.courseRows || [];
+      const pillRows = allData.pillRows || [];
 
       const s = settingsRow[0] || {};
 
@@ -285,14 +304,20 @@ function buildApp() {
   app.get('/api/settings', async (req, res, next) => {
     try {
       const sql = getSql();
-      const [settingsRow] = await sql`SELECT * FROM site_settings WHERE id = 1`;
-      const s = settingsRow || {};
-      const [interests, langs, roles, areas] = await Promise.all([
-        sql`SELECT * FROM research_interests ORDER BY sort_order ASC, id ASC`,
-        sql`SELECT * FROM spoken_languages ORDER BY sort_order ASC, id ASC`,
-        sql`SELECT * FROM teaching_roles ORDER BY sort_order ASC, id ASC`,
-        sql`SELECT * FROM teaching_areas ORDER BY sort_order ASC, id ASC`,
-      ]);
+      const [allData] = await sql`
+        SELECT
+          (SELECT json_agg(t) FROM (SELECT * FROM site_settings WHERE id = 1) t) AS "settingsRow",
+          (SELECT COALESCE(json_agg(t), '[]'::json) FROM (SELECT * FROM research_interests ORDER BY sort_order ASC, id ASC) t) AS "interests",
+          (SELECT COALESCE(json_agg(t), '[]'::json) FROM (SELECT * FROM spoken_languages ORDER BY sort_order ASC, id ASC) t) AS "langs",
+          (SELECT COALESCE(json_agg(t), '[]'::json) FROM (SELECT * FROM teaching_roles ORDER BY sort_order ASC, id ASC) t) AS "roles",
+          (SELECT COALESCE(json_agg(t), '[]'::json) FROM (SELECT * FROM teaching_areas ORDER BY sort_order ASC, id ASC) t) AS "areas"
+      `;
+      const settingsRow = allData.settingsRow || [];
+      const s = settingsRow[0] || {};
+      const interests = allData.interests || [];
+      const langs = allData.langs || [];
+      const roles = allData.roles || [];
+      const areas = allData.areas || [];
 
       res.json({
         profile: {
