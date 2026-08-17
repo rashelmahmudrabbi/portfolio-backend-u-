@@ -146,7 +146,7 @@ function buildApp() {
         filename TEXT
       )`);
       const [cvFile] = await sql(`SELECT file_data, mimetype, filename FROM cv_files WHERE id = 1`);
-      
+
       if (cvFile && cvFile.file_data) {
         const buffer = Buffer.from(cvFile.file_data, 'base64');
         res.setHeader('Content-Type', cvFile.mimetype || 'application/pdf');
@@ -463,7 +463,7 @@ function buildApp() {
       const { username, password } = req.body;
       const sql = getSql();
       await ensureTables(sql);
-      
+
       // Ensure admin_users table exists
       await sql(`CREATE TABLE IF NOT EXISTS admin_users (
         id SERIAL PRIMARY KEY,
@@ -599,7 +599,7 @@ function buildApp() {
       const sql = getSql();
       await ensureTables(sql);
       const counts = {};
-      
+
       await Promise.all(
         DASHBOARD_GROUPS.flatMap(g => g.items).map(async (item) => {
           if (item.table) {
@@ -632,7 +632,7 @@ function buildApp() {
         }
         groupsHtml += `</div>`;
       }
-      
+
       res.send(layout({
         title: 'Dashboard', authed: true,
         body: `<div style="margin-top:32px; margin-bottom:16px;">
@@ -864,7 +864,7 @@ function buildApp() {
     try {
       const sql = getSql();
       const order = Number(req.body.order) || 0;
-      
+
       const src = req.body.src || req.body.photo_file_b64;
       if (src) {
         await sql(
@@ -884,7 +884,7 @@ function buildApp() {
           [order, req.body.caption || '', req.params.photoId]
         );
       }
-      
+
       res.redirect(`/admin/gallery/${req.params.id}/photos`);
     } catch (err) { next(err); }
   });
@@ -926,7 +926,7 @@ function buildApp() {
         const sql = getSql();
         const b64 = req.file.buffer.toString('base64');
         const dataUri = `data:${req.file.mimetype};base64,${b64}`;
-        
+
         await sql(`CREATE TABLE IF NOT EXISTS cv_files (
           id INTEGER PRIMARY KEY DEFAULT 1 CHECK (id = 1),
           file_data TEXT,
@@ -991,8 +991,8 @@ function buildApp() {
             <a class="link" href="/admin/teaching-areas">Teaching Areas</a>
           </p>
           <div class="card">${renderForm({
-            fields: SETTINGS_FIELDS, row: s, action: '/admin/settings', submitLabel: 'Save Settings', includeOrder: false,
-          })}</div>`,
+          fields: SETTINGS_FIELDS, row: s, action: '/admin/settings', submitLabel: 'Save Settings', includeOrder: false,
+        })}</div>`,
       }));
     } catch (err) { next(err); }
   });
@@ -1002,7 +1002,7 @@ function buildApp() {
       const sql = getSql();
       await ensureTables(sql);
       const values = extractValues(SETTINGS_FIELDS, req.body);
-      
+
       if (req.body.avatar_file_b64) {
         values.avatar = req.body.avatar_file_b64;
       } else if (req.file) {
@@ -1070,9 +1070,9 @@ function buildApp() {
         `INSERT INTO gallery_events (sort_order, title, year, category, venue, date) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`,
         [order, req.body.title || '', req.body.year || '', req.body.category || '', req.body.venue || '', req.body.date || '']
       );
-      
+
       const eventId = rows[0].id;
-      
+
       if (req.file) {
         const b64 = req.file.buffer.toString('base64');
         const dataUri = `data:${req.file.mimetype};base64,${b64}`;
@@ -1081,7 +1081,7 @@ function buildApp() {
           [eventId, dataUri, req.body.photo_caption || '']
         );
       }
-      
+
       res.redirect('/admin/gallery');
     } catch (err) { next(err); }
   });
@@ -1118,7 +1118,7 @@ function buildApp() {
         `UPDATE gallery_events SET sort_order = $1, title = $2, year = $3, category = $4, venue = $5, date = $6 WHERE id = $7`,
         [order, req.body.title || '', req.body.year || '', req.body.category || '', req.body.venue || '', req.body.date || '', req.params.id]
       );
-      
+
       if (req.file) {
         const b64 = req.file.buffer.toString('base64');
         const dataUri = `data:${req.file.mimetype};base64,${b64}`;
@@ -1127,7 +1127,7 @@ function buildApp() {
           [req.params.id, dataUri, req.body.photo_caption || '']
         );
       }
-      
+
       res.redirect('/admin/gallery');
     } catch (err) { next(err); }
   });
