@@ -200,24 +200,31 @@ function buildApp() {
           (SELECT COALESCE(json_agg(t), '[]'::json) FROM (SELECT * FROM about_pills ORDER BY sort_order ASC, id ASC) t) AS "pillRows"
       `;
 
-      const settingsRow = allData.settingsRow || [];
-      const interests = allData.interests || [];
-      const langs = allData.langs || [];
-      const roles = allData.roles || [];
-      const areas = allData.areas || [];
-      const eduRows = allData.eduRows || [];
-      const expRows = allData.expRows || [];
-      const pubRows = allData.pubRows || [];
-      const projRows = allData.projRows || [];
-      const certRows = allData.certRows || [];
-      const awardRows = allData.awardRows || [];
-      const actRows = allData.actRows || [];
-      const galleryEvents = allData.galleryEvents || [];
-      const galleryPhotos = allData.galleryPhotos || [];
-      const refRows = allData.refRows || [];
-      const spotRows = allData.spotRows || [];
-      const courseRows = allData.courseRows || [];
-      const pillRows = allData.pillRows || [];
+      const parseJson = (val) => {
+        if (typeof val === 'string') {
+          try { return JSON.parse(val); } catch (e) { return []; }
+        }
+        return val || [];
+      };
+
+      const settingsRow = parseJson(allData.settingsRow);
+      const interests = parseJson(allData.interests);
+      const langs = parseJson(allData.langs);
+      const roles = parseJson(allData.roles);
+      const areas = parseJson(allData.areas);
+      const eduRows = parseJson(allData.eduRows);
+      const expRows = parseJson(allData.expRows);
+      const pubRows = parseJson(allData.pubRows);
+      const projRows = parseJson(allData.projRows);
+      const certRows = parseJson(allData.certRows);
+      const awardRows = parseJson(allData.awardRows);
+      const actRows = parseJson(allData.actRows);
+      const galleryEvents = parseJson(allData.galleryEvents);
+      const galleryPhotos = parseJson(allData.galleryPhotos);
+      const refRows = parseJson(allData.refRows);
+      const spotRows = parseJson(allData.spotRows);
+      const courseRows = parseJson(allData.courseRows);
+      const pillRows = parseJson(allData.pillRows);
 
       const s = settingsRow[0] || {};
 
