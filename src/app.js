@@ -115,7 +115,7 @@ function buildApp() {
   // ── Cache-Control for all GET /api/* responses ───────────────────────
   app.use('/api', (req, res, next) => {
     if (req.method === 'GET') {
-      res.setHeader('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=60');
+      res.setHeader('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=86400');
     }
     next();
   });
@@ -134,6 +134,39 @@ function buildApp() {
   });
 
   app.get('/api/health', (req, res) => res.json({ ok: true }));
+
+  // New endpoint to serve Base64 images directly to avoid bloating the main JSON payload
+  app.get('/api/image/:table/:id/:column', async (req, res, next) => {
+    try {
+      const allowedTables = ['site_settings', 'certifications', 'awards', 'spotlights', 'gallery_photos'];
+      const table = req.params.table;
+      const column = req.params.column;
+      const id = parseInt(req.params.id, 10);
+      
+      if (!allowedTables.includes(table)) return res.status(403).send('Forbidden');
+      if (!['avatar', 'image', 'src'].includes(column)) return res.status(403).send('Forbidden');
+      
+      const sql = getSql();
+      // Safely interpolate table/column since they are strictly whitelisted above
+      const rows = await sql(`SELECT ${column} FROM ${table} WHERE id = $1`, [id]);
+      if (!rows || rows.length === 0) return res.status(404).send('Not found');
+      
+      const b64Str = rows[0][column];
+      if (!b64Str || !b64Str.startsWith('data:image/')) {
+        return res.status(404).send('Not a base64 image');
+      }
+      
+      const matches = b64Str.match(/^data:(image\/\w+);base64,(.+)$/);
+      if (!matches) return res.status(404).send('Invalid image format');
+      
+      const mimeType = matches[1];
+      const buffer = Buffer.from(matches[2], 'base64');
+      
+      res.setHeader('Content-Type', mimeType);
+      res.setHeader('Cache-Control', 'public, max-age=31536000, immutable'); // Cache aggressively for 1 year
+      res.send(buffer);
+    } catch (err) { next(err); }
+  });
 
   app.get('/api/cv/download', async (req, res, next) => {
     try {
@@ -180,7 +213,7 @@ function buildApp() {
       // This eliminates the overhead of 18 concurrent HTTP requests to the database.
       const [allData] = await sql`
         SELECT
-          (SELECT json_agg(t) FROM (SELECT * FROM site_settings WHERE id = 1) t) AS "settingsRow",
+          (SELECT json_agg( (to_jsonb(t) - 'avatar') || jsonb_build_object('avatar', CASE WHEN avatar LIKE 'data:image%' THEN '/api/image/site_settings/' || id || '/avatar' ELSE avatar END) ) FROM (SELECT * FROM site_settings WHERE id = 1) t) AS "settingsRow",
           (SELECT COALESCE(json_agg(t), '[]'::json) FROM (SELECT * FROM research_interests ORDER BY sort_order ASC, id ASC) t) AS "interests",
           (SELECT COALESCE(json_agg(t), '[]'::json) FROM (SELECT * FROM spoken_languages ORDER BY sort_order ASC, id ASC) t) AS "langs",
           (SELECT COALESCE(json_agg(t), '[]'::json) FROM (SELECT * FROM teaching_roles ORDER BY sort_order ASC, id ASC) t) AS "roles",
@@ -189,13 +222,13 @@ function buildApp() {
           (SELECT COALESCE(json_agg(t), '[]'::json) FROM (SELECT * FROM experience ORDER BY sort_order ASC, id ASC) t) AS "expRows",
           (SELECT COALESCE(json_agg(t), '[]'::json) FROM (SELECT * FROM publications ORDER BY sort_order ASC, id ASC) t) AS "pubRows",
           (SELECT COALESCE(json_agg(t), '[]'::json) FROM (SELECT * FROM projects ORDER BY sort_order ASC, id ASC) t) AS "projRows",
-          (SELECT COALESCE(json_agg(t), '[]'::json) FROM (SELECT * FROM certifications ORDER BY sort_order ASC, id ASC) t) AS "certRows",
-          (SELECT COALESCE(json_agg(t), '[]'::json) FROM (SELECT * FROM awards ORDER BY sort_order ASC, id ASC) t) AS "awardRows",
+          (SELECT COALESCE(json_agg( (to_jsonb(t) - 'image') || jsonb_build_object('image', CASE WHEN image LIKE 'data:image%' THEN '/api/image/certifications/' || id || '/image' ELSE image END) ), '[]'::json) FROM (SELECT * FROM certifications ORDER BY sort_order ASC, id ASC) t) AS "certRows",
+          (SELECT COALESCE(json_agg( (to_jsonb(t) - 'image') || jsonb_build_object('image', CASE WHEN image LIKE 'data:image%' THEN '/api/image/awards/' || id || '/image' ELSE image END) ), '[]'::json) FROM (SELECT * FROM awards ORDER BY sort_order ASC, id ASC) t) AS "awardRows",
           (SELECT COALESCE(json_agg(t), '[]'::json) FROM (SELECT * FROM activities ORDER BY sort_order ASC, id ASC) t) AS "actRows",
           (SELECT COALESCE(json_agg(t), '[]'::json) FROM (SELECT * FROM gallery_events ORDER BY sort_order ASC, id ASC) t) AS "galleryEvents",
-          (SELECT COALESCE(json_agg(t), '[]'::json) FROM (SELECT * FROM gallery_photos ORDER BY sort_order ASC, id ASC) t) AS "galleryPhotos",
+          (SELECT COALESCE(json_agg( (to_jsonb(t) - 'src') || jsonb_build_object('src', CASE WHEN src LIKE 'data:image%' THEN '/api/image/gallery_photos/' || id || '/src' ELSE src END) ), '[]'::json) FROM (SELECT * FROM gallery_photos ORDER BY sort_order ASC, id ASC) t) AS "galleryPhotos",
           (SELECT COALESCE(json_agg(t), '[]'::json) FROM (SELECT * FROM reference_list ORDER BY sort_order ASC, id ASC) t) AS "refRows",
-          (SELECT COALESCE(json_agg(t), '[]'::json) FROM (SELECT * FROM spotlights ORDER BY sort_order ASC, id ASC) t) AS "spotRows",
+          (SELECT COALESCE(json_agg( (to_jsonb(t) - 'image') || jsonb_build_object('image', CASE WHEN image LIKE 'data:image%' THEN '/api/image/spotlights/' || id || '/image' ELSE image END) ), '[]'::json) FROM (SELECT * FROM spotlights ORDER BY sort_order ASC, id ASC) t) AS "spotRows",
           (SELECT COALESCE(json_agg(t), '[]'::json) FROM (SELECT * FROM courses ORDER BY sort_order ASC, id ASC) t) AS "courseRows",
           (SELECT COALESCE(json_agg(t), '[]'::json) FROM (SELECT * FROM about_pills ORDER BY sort_order ASC, id ASC) t) AS "pillRows"
       `;
