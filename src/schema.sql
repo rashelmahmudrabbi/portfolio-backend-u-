@@ -234,6 +234,10 @@ CREATE TABLE IF NOT EXISTS reference_list (
 
 CREATE INDEX IF NOT EXISTS idx_gallery_photos_event_id ON gallery_photos(event_id);
 
-ALTER TABLE gallery_events ADD COLUMN category TEXT DEFAULT '';
-ALTER TABLE gallery_events ADD COLUMN venue TEXT DEFAULT '';
-ALTER TABLE gallery_events ADD COLUMN date TEXT DEFAULT '';
+-- Safe column additions (no-op if columns already exist from CREATE TABLE)
+DO $$ BEGIN
+  ALTER TABLE gallery_events ADD COLUMN IF NOT EXISTS category TEXT DEFAULT '';
+  ALTER TABLE gallery_events ADD COLUMN IF NOT EXISTS venue TEXT DEFAULT '';
+  ALTER TABLE gallery_events ADD COLUMN IF NOT EXISTS date TEXT DEFAULT '';
+EXCEPTION WHEN duplicate_column THEN NULL;
+END $$;
