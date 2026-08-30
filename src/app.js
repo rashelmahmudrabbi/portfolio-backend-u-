@@ -814,7 +814,7 @@ function buildApp() {
       );
       const rows = photos
         .map((p) => `<tr>
-          <td style="width: 60px;"><img src="${esc(p.src)}" alt="Thumbnail" style="height: 48px; width: 48px; object-fit: cover; border-radius: 4px; display: block; background: var(--surface-2);" /></td>
+          <td style="width: 60px;"><img src="${esc(p.src.startsWith('media/') ? '/' + p.src : p.src).replace(/ /g, '%20')}" alt="Thumbnail" style="height: 48px; width: 48px; object-fit: cover; border-radius: 4px; display: block; background: var(--surface-2);" /></td>
           <td>${esc(p.caption)}</td>
           <td>
             <form method="post" action="/admin/gallery/${event.id}/photos/${p.id}/reorder" class="inline" style="margin:0;">

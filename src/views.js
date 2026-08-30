@@ -852,7 +852,7 @@ function fieldInput(field, value) {
   }
   if (field.type === 'file') {
     return `
-      ${v ? `<div style="margin-bottom:8px;"><img src="${esc(v)}" style="max-height:80px; max-width:120px; object-fit:cover; border-radius:6px; border:1px solid var(--border); display:block; margin-bottom:4px;" /><small class="muted">Current image: <code>${esc(truncate(v, 40))}</code></small></div>` : ''}
+      ${v ? `<div style="margin-bottom:8px;"><img src="${esc(String(v).startsWith('media/') ? '/' + v : v).replace(/ /g, '%20')}" style="max-height:80px; max-width:120px; object-fit:cover; border-radius:6px; border:1px solid var(--border); display:block; margin-bottom:4px;" /><small class="muted">Current image: <code>${esc(truncate(v, 40))}</code></small></div>` : ''}
       <input type="file" name="${esc(field.key)}" accept="image/*" style="display:block; padding:8px; border:1px solid var(--border); border-radius:6px; width:100%; background:var(--surface-2);" />
     `;
   }
