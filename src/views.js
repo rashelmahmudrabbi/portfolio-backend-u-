@@ -688,7 +688,8 @@ ${authed ? `
     <a href="/admin/references"><i class="bi bi-person-lines-fill"></i> References</a>
     
     <div class="sidebar-category">Portfolio & Media</div>
-    <a href="/admin/projects"><i class="bi bi-kanban"></i> Projects</a>
+    <a href="/admin/projects"><i class="bi bi-window-sidebar"></i> Software Projects</a>
+    <a href="/admin/research-projects"><i class="bi bi-kanban"></i> Research Projects</a>
     <a href="/admin/gallery"><i class="bi bi-images"></i> Gallery</a>
     <a href="/admin/blog"><i class="bi bi-pencil-square"></i> Blog Posts</a>
     
