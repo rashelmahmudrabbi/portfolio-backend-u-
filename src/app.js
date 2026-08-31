@@ -40,7 +40,7 @@ async function ensureTables(sql) {
 // own dedicated admin routes further down. Settings is a singleton and
 // handled entirely separately.
 const ADMIN_RESOURCE_KEYS = [
-  'education', 'experience', 'publications', 'projects', 'research-projects', 'certifications',
+  'education', 'experience', 'publications', 'projects', 'certifications',
   'awards', 'activities', 'courses', 'blog', 'references',
   'research-interests', 'spoken-languages', 'teaching-roles', 'teaching-areas', 'spotlights', 'about-pills',
 ];
@@ -602,12 +602,9 @@ function buildApp() {
       ]
     },
     {
-      title: 'Projects',
+      title: 'Portfolio & Media',
       items: [
-        { key: 'projects', label: 'Software Projects', desc: 'Web & App Development', icon: 'bi-window-sidebar', color: '#10b981', table: 'projects', where: "category = 'development'" },
-        { key: 'research-projects', label: 'Research Projects', desc: 'Research & Thesis Projects', icon: 'bi-kanban', color: '#8b5cf6', table: 'projects', where: "category IN ('research', 'thesis')" }
-      ]
-    },
+        { key: 'projects', label: 'Projects', desc: 'Software & Research Projects', icon: 'bi-kanban', color: '#10b981', table: 'projects' },
     {
       title: 'Media',
       items: [
@@ -684,38 +681,68 @@ function buildApp() {
     } catch (err) { next(err); }
   });
 
+  // Custom route for /admin/projects to render two tables on one page
+  app.get('/admin/projects', async (req, res, next) => {
+    try {
+      const sql = getSql();
+      await ensureTables(sql);
+      const rows = await sql(`SELECT * FROM projects ORDER BY sort_order ASC, id ASC`);
+      
+      const researchRows = rows.filter(r => r.category === 'research' || r.category === 'thesis');
+      const devRows = rows.filter(r => r.category === 'development');
+      
+      const resource = RESOURCES.projects;
+      
+      const tableResearch = renderTable({ resourceKey: 'projects', label: 'Research & Thesis Projects', fields: resource.fields, rows: researchRows });
+      const tableDev = renderTable({ resourceKey: 'projects', label: 'Software & Web Development Projects', fields: resource.fields, rows: devRows });
+      
+      res.send(layout({
+        title: 'Projects', authed: true,
+        body: `<h1>Projects</h1>
+          <p class="muted">Manage your projects here. They are visually separated into Research and Software projects.</p>
+          <div style="margin-bottom: 48px;">${tableResearch}</div>
+          <div>${tableDev}</div>`,
+      }));
+    } catch (err) { next(err); }
+  });
+
   // Generic CRUD for every "simple list" resource.
   for (const key of ADMIN_RESOURCE_KEYS) {
+    if (key === 'projects') continue; // Handled by custom route above for GET, but we still need it for POST, Edit, Delete
+
     const resource = RESOURCES[key];
 
-    app.get(`/admin/${key}`, async (req, res, next) => {
-      try {
-        const sql = getSql();
-        await ensureTables(sql);
-        let rows = [];
-        const whereClause = resource.where ? `WHERE ${resource.where}` : '';
+    // Only register GET /admin/:key if it's not 'projects', because we already registered a custom one above
+    if (key !== 'projects') {
+      app.get(`/admin/${key}`, async (req, res, next) => {
         try {
-          rows = await sql(`SELECT * FROM ${resource.table} ${whereClause} ORDER BY sort_order ASC, id ASC`);
-        } catch (queryErr) {
-          if (queryErr.message && queryErr.message.includes('does not exist')) {
-            // Force table creation and retry
-            tablesEnsured = false;
-            await ensureTables(sql);
-            try {
-              rows = await sql(`SELECT * FROM ${resource.table} ${whereClause} ORDER BY sort_order ASC, id ASC`);
-            } catch (retryErr) {
-              rows = [];
+          const sql = getSql();
+          await ensureTables(sql);
+          let rows = [];
+          const whereClause = resource.where ? `WHERE ${resource.where}` : '';
+          try {
+            rows = await sql(`SELECT * FROM ${resource.table} ${whereClause} ORDER BY sort_order ASC, id ASC`);
+          } catch (queryErr) {
+            if (queryErr.message && queryErr.message.includes('does not exist')) {
+              // Force table creation and retry
+              tablesEnsured = false;
+              await ensureTables(sql);
+              try {
+                rows = await sql(`SELECT * FROM ${resource.table} ${whereClause} ORDER BY sort_order ASC, id ASC`);
+              } catch (retryErr) {
+                rows = [];
+              }
+            } else {
+              throw queryErr;
             }
-          } else {
-            throw queryErr;
           }
-        }
-        res.send(layout({
-          title: resource.label, authed: true,
-          body: `<h1>${esc(resource.label)}</h1>` + renderTable({ resourceKey: key, label: resource.label, fields: resource.fields, rows }),
-        }));
-      } catch (err) { next(err); }
-    });
+          res.send(layout({
+            title: resource.label, authed: true,
+            body: `<h1>${esc(resource.label)}</h1>` + renderTable({ resourceKey: key, label: resource.label, fields: resource.fields, rows }),
+          }));
+        } catch (err) { next(err); }
+      });
+    }
 
     app.get(`/admin/${key}/new`, (req, res) => {
       res.send(layout({
