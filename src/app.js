@@ -604,7 +604,9 @@ function buildApp() {
     {
       title: 'Portfolio & Media',
       items: [
-        { key: 'projects', label: 'Projects', desc: 'Software & Research Projects', icon: 'bi-kanban', color: '#10b981', table: 'projects' },
+        { key: 'projects', label: 'Projects', desc: 'Software & Research Projects', icon: 'bi-kanban', color: '#10b981', table: 'projects' }
+      ]
+    },
     {
       title: 'Media',
       items: [
