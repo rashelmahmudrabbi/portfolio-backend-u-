@@ -602,10 +602,15 @@ function buildApp() {
       ]
     },
     {
-      title: 'Portfolio & Media',
+      title: 'Projects',
       items: [
         { key: 'projects', label: 'Software Projects', desc: 'Web & App Development', icon: 'bi-window-sidebar', color: '#10b981', table: 'projects', where: "category = 'development'" },
-        { key: 'research-projects', label: 'Research Projects', desc: 'Research & Thesis Projects', icon: 'bi-kanban', color: '#8b5cf6', table: 'projects', where: "category IN ('research', 'thesis')" },
+        { key: 'research-projects', label: 'Research Projects', desc: 'Research & Thesis Projects', icon: 'bi-kanban', color: '#8b5cf6', table: 'projects', where: "category IN ('research', 'thesis')" }
+      ]
+    },
+    {
+      title: 'Media',
+      items: [
         { key: 'gallery', label: 'Gallery Events', desc: 'Events + photos', icon: 'bi-images', color: '#14b8a6', table: 'gallery_events' },
         { key: 'blog', label: 'Blog Posts', desc: 'Manage blog posts', icon: 'bi-pencil-square', color: '#06b6d4', table: 'blog_posts' }
       ]
