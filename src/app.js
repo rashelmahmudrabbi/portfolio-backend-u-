@@ -40,7 +40,7 @@ async function ensureTables(sql) {
 // own dedicated admin routes further down. Settings is a singleton and
 // handled entirely separately.
 const ADMIN_RESOURCE_KEYS = [
-  'education', 'experience', 'publications', 'projects', 'certifications',
+  'education', 'experience', 'publications', 'projects', 'research-projects', 'certifications',
   'awards', 'activities', 'courses', 'blog', 'references',
   'research-interests', 'spoken-languages', 'teaching-roles', 'teaching-areas', 'spotlights', 'about-pills',
 ];
@@ -604,7 +604,8 @@ function buildApp() {
     {
       title: 'Portfolio & Media',
       items: [
-        { key: 'projects', label: 'Projects', desc: 'Manage projects', icon: 'bi-kanban', color: '#10b981', table: 'projects' },
+        { key: 'projects', label: 'Software Projects', desc: 'Web & App Development', icon: 'bi-window-sidebar', color: '#10b981', table: 'projects', where: "category = 'development'" },
+        { key: 'research-projects', label: 'Research Projects', desc: 'Research & Thesis Projects', icon: 'bi-kanban', color: '#8b5cf6', table: 'projects', where: "category IN ('research', 'thesis')" },
         { key: 'gallery', label: 'Gallery Events', desc: 'Events + photos', icon: 'bi-images', color: '#14b8a6', table: 'gallery_events' },
         { key: 'blog', label: 'Blog Posts', desc: 'Manage blog posts', icon: 'bi-pencil-square', color: '#06b6d4', table: 'blog_posts' }
       ]
@@ -637,7 +638,7 @@ function buildApp() {
         DASHBOARD_GROUPS.flatMap(g => g.items).map(async (item) => {
           if (item.table) {
             try {
-              const result = await sql(`SELECT count(*) as count FROM ${item.table}`);
+              const result = await sql(`SELECT count(*) as count FROM ${item.table} ${item.where ? 'WHERE ' + item.where : ''}`);
               counts[item.key] = result && result[0] ? result[0].count : 0;
             } catch (e) {
               counts[item.key] = 0;
@@ -687,15 +688,16 @@ function buildApp() {
         const sql = getSql();
         await ensureTables(sql);
         let rows = [];
+        const whereClause = resource.where ? `WHERE ${resource.where}` : '';
         try {
-          rows = await sql(`SELECT * FROM ${resource.table} ORDER BY sort_order ASC, id ASC`);
+          rows = await sql(`SELECT * FROM ${resource.table} ${whereClause} ORDER BY sort_order ASC, id ASC`);
         } catch (queryErr) {
           if (queryErr.message && queryErr.message.includes('does not exist')) {
             // Force table creation and retry
             tablesEnsured = false;
             await ensureTables(sql);
             try {
-              rows = await sql(`SELECT * FROM ${resource.table} ORDER BY sort_order ASC, id ASC`);
+              rows = await sql(`SELECT * FROM ${resource.table} ${whereClause} ORDER BY sort_order ASC, id ASC`);
             } catch (retryErr) {
               rows = [];
             }

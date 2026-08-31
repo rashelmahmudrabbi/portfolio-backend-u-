@@ -74,9 +74,38 @@ const RESOURCES = {
 
   projects: {
     table: 'projects',
-    label: 'Projects',
+    label: 'Software & Web Development',
+    where: "category = 'development'",
     fields: [
-      { key: 'category', label: 'Category', type: 'select', options: ['thesis', 'research', 'development'] },
+      { key: 'category', label: 'Category', type: 'select', options: ['development'] },
+      { key: 'title', label: 'Title', type: 'text' },
+      { key: 'description', label: 'Description', type: 'textarea' },
+      { key: 'tech', label: 'Tech (comma separated)', type: 'text' },
+      { key: 'year', label: 'Year', type: 'text' },
+      { key: 'github_link', label: 'GitHub link', type: 'text' },
+      { key: 'paper_link', label: 'Paper / live link', type: 'text' },
+      { key: 'featured', label: 'Featured', type: 'checkbox' },
+    ],
+    serialize: (row) => ({
+      id: row.id,
+      category: row.category,
+      title: row.title,
+      description: row.description,
+      tech: splitCommas(row.tech),
+      year: row.year,
+      githubLink: row.github_link,
+      paperLink: row.paper_link,
+      featured: row.featured,
+      order: row.sort_order,
+    }),
+  },
+
+  'research-projects': {
+    table: 'projects',
+    label: 'Research Projects & Thesis',
+    where: "category IN ('research', 'thesis')",
+    fields: [
+      { key: 'category', label: 'Category', type: 'select', options: ['research', 'thesis'] },
       { key: 'title', label: 'Title', type: 'text' },
       { key: 'description', label: 'Description', type: 'textarea' },
       { key: 'tech', label: 'Tech (comma separated)', type: 'text' },
