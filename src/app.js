@@ -710,8 +710,6 @@ function buildApp() {
 
   // Generic CRUD for every "simple list" resource.
   for (const key of ADMIN_RESOURCE_KEYS) {
-    if (key === 'projects') continue; // Handled by custom route above for GET, but we still need it for POST, Edit, Delete
-
     const resource = RESOURCES[key];
 
     // Only register GET /admin/:key if it's not 'projects', because we already registered a custom one above
