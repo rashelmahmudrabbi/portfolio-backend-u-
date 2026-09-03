@@ -242,3 +242,6 @@ DO $$ BEGIN
   ALTER TABLE gallery_events ADD COLUMN IF NOT EXISTS date TEXT DEFAULT '';
 EXCEPTION WHEN duplicate_column THEN NULL;
 END $$;
+
+-- Add missing column if it doesn't exist (Postgres 11+)
+ALTER TABLE site_settings ADD COLUMN IF NOT EXISTS research_statement_text TEXT DEFAULT '';
