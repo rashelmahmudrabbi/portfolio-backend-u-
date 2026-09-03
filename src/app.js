@@ -294,6 +294,7 @@ function buildApp() {
             kicker: s.about_kicker || 'ABOUT ME',
             headline: s.about_headline || 'AI research with a practical mindset.',
             text: s.about_text || '',
+            research_statement_text: s.research_statement_text || '',
             statusText: s.about_status_text || 'Open to research opportunities',
             pills: pillRows && pillRows.length > 0 ? pillRows.map(p => ({
               id: p.id,
@@ -1028,15 +1029,16 @@ function buildApp() {
     try {
       const sql = getSql();
       await ensureTables(sql);
-      const { about_kicker, about_headline, about_status_text, about_text } = req.body;
+      const { about_kicker, about_headline, about_status_text, about_text, research_statement_text } = req.body;
       await sql(
         `UPDATE site_settings SET
           about_kicker = $1,
           about_headline = $2,
           about_status_text = $3,
-          about_text = $4
+          about_text = $4,
+          research_statement_text = $5
         WHERE id = 1`,
-        [about_kicker || 'ABOUT ME', about_headline || '', about_status_text || '', about_text || '']
+        [about_kicker || 'ABOUT ME', about_headline || '', about_status_text || '', about_text || '', research_statement_text || '']
       );
       res.redirect('/admin/about?success=1');
     } catch (err) { next(err); }

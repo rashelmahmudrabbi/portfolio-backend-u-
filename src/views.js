@@ -999,6 +999,12 @@ function renderAboutAdmin({ settings = {}, pills = [] }) {
         <small class="muted" style="display:block; margin-top:6px;">Tip: Use the toolbar buttons above for <b>Bold</b>, <i>Italic</i>, <u>Underline</u>, <b>Lists</b>, and <b>Justify</b>. Leave empty to use the default 3-paragraph executive narrative.</small>
       </div>
 
+      <div style="margin-bottom:18px;">
+        <label style="font-weight:600; margin-bottom:6px; display:block;">Research Vision / Statement (Rich Formatting Toolbar)</label>
+        ${richTextarea('research_statement_text', 'Research Statement Text', settings.research_statement_text, 'researchVisionArea')}
+        <small class="muted" style="display:block; margin-top:6px;">This text appears in the Research Statement section on the home page.</small>
+      </div>
+
       <div class="actions">
         <button class="btn" type="submit">Save About Section</button>
       </div>
