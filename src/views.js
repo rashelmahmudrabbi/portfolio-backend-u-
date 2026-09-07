@@ -118,6 +118,9 @@ const STYLE = `
     gap: 4px;
   }
   
+  .sidebar-category-details summary::-webkit-details-marker { display: none; }
+  .sidebar-category-details { margin-top: 6px; }
+  
   .sidebar-category {
     font-size: 11px;
     font-weight: 700;
@@ -125,7 +128,23 @@ const STYLE = `
     letter-spacing: 1px;
     color: var(--sidebar-text-muted);
     padding: 12px 12px 6px;
-    margin-top: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    list-style: none;
+    user-select: none;
+  }
+  
+  .sidebar-category:hover { color: var(--primary); }
+  
+  .sidebar-category .toggle-icon {
+    font-size: 10px;
+    transition: transform 0.2s ease;
+  }
+  
+  .sidebar-category-details[open] .toggle-icon {
+    transform: rotate(-180deg);
   }
   
   .sidebar-nav a {
@@ -311,6 +330,26 @@ const STYLE = `
   .checkbox-row label { margin: 0; cursor: pointer; color: var(--text-main); font-size: 13.5px; }
   
   .actions { margin-top: 24px; display: flex; gap: 12px; padding-top: 18px; border-top: 1px solid var(--border); }
+  
+  .form-group-section {
+    background: var(--bg-alt);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px 24px;
+    margin-top: 24px;
+    margin-bottom: 24px;
+  }
+  .form-group-section h3 {
+    font-size: 13.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--primary);
+    margin: 0 0 16px 0;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 10px;
+  }
+  .form-group-section > label:first-of-type { margin-top: 0; }
   
   .flash { 
     background: var(--primary); color: #fff;
@@ -673,35 +712,45 @@ ${authed ? `
   </div>
   
   <div class="sidebar-nav">
-    <div class="sidebar-category">Overview</div>
-    <a href="/admin"><i class="bi bi-grid-fill"></i> Dashboard</a>
-    <a href="/admin/about"><i class="bi bi-person-lines-fill"></i> About Section &amp; Pills</a>
-    <a href="/admin/spotlights"><i class="bi bi-stars"></i> Spotlight Highlights</a>
-    <a href="/admin/settings"><i class="bi bi-gear-fill"></i> Site Settings</a>
-    <a href="/admin/cv"><i class="bi bi-file-earmark-person-fill"></i> Manage CV</a>
+    <details class="sidebar-category-details" open>
+      <summary class="sidebar-category">Overview <i class="bi bi-chevron-down toggle-icon"></i></summary>
+      <a href="/admin"><i class="bi bi-grid-fill"></i> Dashboard</a>
+      <a href="/admin/about"><i class="bi bi-person-lines-fill"></i> About Section &amp; Pills</a>
+      <a href="/admin/spotlights"><i class="bi bi-stars"></i> Spotlight Highlights</a>
+      <a href="/admin/settings"><i class="bi bi-gear-fill"></i> Site Settings</a>
+      <a href="/admin/cv"><i class="bi bi-file-earmark-person-fill"></i> Manage CV</a>
+    </details>
     
-    <div class="sidebar-category">Academic & Research</div>
-    <a href="/admin/publications"><i class="bi bi-journal-text"></i> Publications</a>
-    <a href="/admin/research-interests"><i class="bi bi-lightbulb-fill"></i> Research Interests</a>
-    <a href="/admin/education"><i class="bi bi-mortarboard-fill"></i> Education</a>
-    <a href="/admin/experience"><i class="bi bi-briefcase-fill"></i> Experience</a>
-    <a href="/admin/references"><i class="bi bi-person-lines-fill"></i> References</a>
+    <details class="sidebar-category-details" open>
+      <summary class="sidebar-category">Academic & Research <i class="bi bi-chevron-down toggle-icon"></i></summary>
+      <a href="/admin/publications"><i class="bi bi-journal-text"></i> Publications</a>
+      <a href="/admin/research-interests"><i class="bi bi-lightbulb-fill"></i> Research Interests</a>
+      <a href="/admin/education"><i class="bi bi-mortarboard-fill"></i> Education</a>
+      <a href="/admin/experience"><i class="bi bi-briefcase-fill"></i> Experience</a>
+      <a href="/admin/references"><i class="bi bi-person-lines-fill"></i> References</a>
+    </details>
     
-    <div class="sidebar-category">Portfolio & Media</div>
-    <a href="/admin/projects"><i class="bi bi-kanban"></i> Projects</a>
-    <a href="/admin/gallery"><i class="bi bi-images"></i> Gallery</a>
-    <a href="/admin/blog"><i class="bi bi-pencil-square"></i> Blog Posts</a>
+    <details class="sidebar-category-details">
+      <summary class="sidebar-category">Portfolio & Media <i class="bi bi-chevron-down toggle-icon"></i></summary>
+      <a href="/admin/projects"><i class="bi bi-kanban"></i> Projects</a>
+      <a href="/admin/gallery"><i class="bi bi-images"></i> Gallery</a>
+      <a href="/admin/blog"><i class="bi bi-pencil-square"></i> Blog Posts</a>
+    </details>
     
-    <div class="sidebar-category">Recognition & Skills</div>
-    <a href="/admin/awards"><i class="bi bi-trophy-fill"></i> Awards</a>
-    <a href="/admin/certifications"><i class="bi bi-patch-check-fill"></i> Certifications</a>
-    <a href="/admin/activities"><i class="bi bi-activity"></i> Activities</a>
-    <a href="/admin/spoken-languages"><i class="bi bi-translate"></i> Spoken Languages</a>
+    <details class="sidebar-category-details">
+      <summary class="sidebar-category">Recognition & Skills <i class="bi bi-chevron-down toggle-icon"></i></summary>
+      <a href="/admin/awards"><i class="bi bi-trophy-fill"></i> Awards</a>
+      <a href="/admin/certifications"><i class="bi bi-patch-check-fill"></i> Certifications</a>
+      <a href="/admin/activities"><i class="bi bi-activity"></i> Activities</a>
+      <a href="/admin/spoken-languages"><i class="bi bi-translate"></i> Spoken Languages</a>
+    </details>
 
-    <div class="sidebar-category">Teaching</div>
-    <a href="/admin/teaching-roles"><i class="bi bi-person-badge"></i> Teaching Roles</a>
-    <a href="/admin/courses"><i class="bi bi-mortarboard"></i> Courses &amp; Workshops</a>
-    <a href="/admin/teaching-areas"><i class="bi bi-book-half"></i> Teaching Areas</a>
+    <details class="sidebar-category-details">
+      <summary class="sidebar-category">Teaching <i class="bi bi-chevron-down toggle-icon"></i></summary>
+      <a href="/admin/teaching-roles"><i class="bi bi-person-badge"></i> Teaching Roles</a>
+      <a href="/admin/courses"><i class="bi bi-mortarboard"></i> Courses &amp; Workshops</a>
+      <a href="/admin/teaching-areas"><i class="bi bi-book-half"></i> Teaching Areas</a>
+    </details>
   </div>
   
   <div class="sidebar-footer">
@@ -860,12 +909,36 @@ function fieldInput(field, value) {
 }
 
 function renderForm({ fields, row = {}, action, submitLabel, includeOrder = true, extraHidden = '' }) {
-  const rows = fields
-    .map((f) => {
-      if (f.type === 'checkbox') return fieldInput(f, row[f.key]);
-      return `<label for="${esc(f.key)}">${esc(f.label)}</label>${fieldInput(f, row[f.key])}`;
-    })
-    .join('\n');
+  let rows = '';
+  const hasGroups = fields.some(f => f.group);
+  
+  if (hasGroups) {
+    let currentGroup = null;
+    let groupContent = '';
+    fields.forEach(f => {
+      const g = f.group || 'General Settings';
+      if (g !== currentGroup) {
+        if (currentGroup !== null) {
+          rows += `<div class="form-group-section"><h3>${esc(currentGroup)}</h3>${groupContent}</div>`;
+        }
+        currentGroup = g;
+        groupContent = '';
+      }
+      if (f.type === 'checkbox') groupContent += fieldInput(f, row[f.key]) + '\n';
+      else groupContent += `<label for="${esc(f.key)}">${esc(f.label)}</label>${fieldInput(f, row[f.key])}\n`;
+    });
+    if (currentGroup !== null) {
+      rows += `<div class="form-group-section"><h3>${esc(currentGroup)}</h3>${groupContent}</div>`;
+    }
+  } else {
+    rows = fields
+      .map((f) => {
+        if (f.type === 'checkbox') return fieldInput(f, row[f.key]);
+        return `<label for="${esc(f.key)}">${esc(f.label)}</label>${fieldInput(f, row[f.key])}`;
+      })
+      .join('\n');
+  }
+
   const orderRow = includeOrder
     ? `<label for="order">Sort order (lower shows first)</label><input type="number" name="order" value="${esc(row.sort_order ?? row.order ?? 0)}" />`
     : '';
