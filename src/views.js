@@ -832,7 +832,10 @@ ${authed ? `
 }
 
 function richTextarea(name, label, value, customId) {
-  const v = value === undefined || value === null ? '' : String(value);
+  let v = value === undefined || value === null ? '' : String(value);
+  // Strip block-level layout tags that might have been accidentally pasted
+  v = v.replace(/<\/?(section|div|article|main|header|footer)[^>]*>/gi, '').trim();
+
   const id = customId || 'wysiwyg_' + name.replace(/[^a-zA-Z0-9_]/g, '_');
   
   let initialHtml = v;
