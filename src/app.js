@@ -1068,7 +1068,13 @@ function buildApp() {
     try {
       const sql = getSql();
       await ensureTables(sql);
-      const { about_kicker, about_headline, about_status_text, about_text, research_statement_text } = req.body;
+      let { about_kicker, about_headline, about_status_text, about_text, research_statement_text } = req.body;
+      
+      // Strip block-level layout tags if admin accidentally pasted full page HTML
+      const stripLayoutTags = (html) => html ? html.replace(/<\/?(section|div|article|main|header|footer)[^>]*>/gi, '').trim() : '';
+      about_text = stripLayoutTags(about_text);
+      research_statement_text = stripLayoutTags(research_statement_text);
+
       await sql(
         `UPDATE site_settings SET
           about_kicker = $1,
