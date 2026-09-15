@@ -56,6 +56,7 @@ const PUBLIC_API_KEYS = [
 function buildApp() {
   const app = express();
   app.disable('x-powered-by');
+  app.use(express.json({ limit: '1mb' }));
   app.use(express.urlencoded({ extended: false }));
 
   // ── Security headers ─────────────────────────────────────────────────
@@ -201,13 +202,41 @@ function buildApp() {
       }
     } catch (err) { next(err); }
   });
+
+  app.post('/api/contact', async (req, res, next) => {
+    try {
+      const sql = getSql();
+      await ensureTables(sql);
+
+      const name = (req.body.name || '').trim();
+      const email = (req.body.email || '').trim();
+      const subject = (req.body.subject || '').trim();
+      const message = (req.body.message || '').trim();
+
+      if (!name || !email || !message) {
+        return res.status(400).json({ error: 'Name, email, and message are required.' });
+      }
+
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        return res.status(400).json({ error: 'Please provide a valid email address.' });
+      }
+
+      await sql`
+        INSERT INTO contact_messages (name, email, subject, message)
+        VALUES (${name}, ${email}, ${subject}, ${message})
+      `;
+
+      res.status(201).json({ success: true, message: 'Your message has been received! Thank you for reaching out.' });
+    } catch (err) { next(err); }
+  });
+
   // ── Combined /api/portfolio endpoint ──────────────────────────────────
   // Returns ALL homepage data in a single response, cutting round-trips
   // from 10+ to 1 and making the page load significantly faster.
   app.get('/api/portfolio', async (req, res, next) => {
     try {
       const sql = getSql();
-      await ensureTables(sql);
 
       // Fetch everything in a single roundtrip using JSON aggregation.
       // This eliminates the overhead of 18 concurrent HTTP requests to the database.
@@ -267,9 +296,9 @@ function buildApp() {
         (byEvent[p.event_id] = byEvent[p.event_id] || []).push({ src: p.src, caption: p.caption });
       }
       
-      // Vercel Edge Caching: Cache for 60 seconds at the edge, serve stale while revalidating.
+      // Vercel Edge Caching: Cache for 5 minutes at the edge CDN, serve stale while revalidating.
       // This drops data pull time from ~800ms down to ~10ms for 99% of visitors!
-      res.setHeader('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=120');
+      res.setHeader('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=86400');
 
       res.json({
         settings: {
@@ -285,7 +314,7 @@ function buildApp() {
             socials: {
               github: s.social_github || '', linkedin: s.social_linkedin || '',
               researchgate: s.social_researchgate || '', scholar: s.social_scholar || '',
-              orcid: s.social_orcid || '',
+              orcid: s.social_orcid || '', x: s.social_x || '',
             },
           },
           researchInterests: interests.map((r) => ({ icon: r.icon, topic: r.topic, desc: r.description })),
@@ -633,6 +662,12 @@ function buildApp() {
         { key: 'teaching-roles', label: 'Teaching Roles', desc: 'Manage teaching roles', icon: 'bi-person-badge', color: '#8b5cf6', table: 'teaching_roles' },
         { key: 'teaching-areas', label: 'Teaching Areas', desc: 'Manage teaching areas', icon: 'bi-book-half', color: '#d946ef', table: 'teaching_areas' },
         { key: 'courses', label: 'Teaching Courses', desc: 'Manage teaching courses', icon: 'bi-journal-bookmark-fill', color: '#ec4899', table: 'courses' }
+      ]
+    },
+    {
+      title: 'Inquiries & Messages',
+      items: [
+        { key: 'contact-messages', label: 'Contact Messages', desc: 'Inquiries from contact form', icon: 'bi-envelope-paper-fill', color: '#f59e0b', table: 'contact_messages' }
       ]
     }
   ];
@@ -1222,6 +1257,60 @@ function buildApp() {
     } catch (err) { next(err); }
   });
 
+  // --- Contact messages admin routes ---
+  app.get('/admin/contact-messages', async (req, res, next) => {
+    try {
+      const sql = getSql();
+      await ensureTables(sql);
+      const rows = await sql`SELECT * FROM contact_messages ORDER BY created_at DESC, id DESC`;
+
+      const listHtml = rows.length ? rows.map(r => `
+        <div class="card" style="margin-bottom:16px; padding:20px; border-radius:12px; border:1px solid var(--border); ${r.read ? 'opacity:0.8;' : 'border-left:4px solid #f59e0b;'}">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px; flex-wrap:wrap; gap:8px;">
+            <div>
+              <strong style="font-size:17px; color:var(--text-main);">${esc(r.name)}</strong>
+              <span style="color:var(--text-muted); font-size:14px; margin-left:8px;">&lt;<a href="mailto:${esc(r.email)}" style="color:var(--accent);">${esc(r.email)}</a>&gt;</span>
+              ${r.read ? '<span style="margin-left:8px; font-size:12px; background:#e2e8f0; color:#475569; padding:2px 8px; border-radius:12px;">Read</span>' : '<span style="margin-left:8px; font-size:12px; background:#fef3c7; color:#92400e; padding:2px 8px; border-radius:12px; font-weight:600;">New</span>'}
+            </div>
+            <div style="font-size:13px; color:var(--text-muted);">
+              ${r.created_at ? new Date(r.created_at).toLocaleString() : ''}
+            </div>
+          </div>
+          ${r.subject ? `<div style="font-weight:600; font-size:15px; margin-bottom:8px; color:var(--text-main);">Subject: ${esc(r.subject)}</div>` : ''}
+          <div style="white-space:pre-wrap; line-height:1.6; color:var(--text-main); background:rgba(0,0,0,0.02); padding:14px; border-radius:8px; font-size:14px; margin-bottom:12px;">${esc(r.message)}</div>
+          <div style="display:flex; gap:10px; justify-content:flex-end;">
+            <a href="mailto:${esc(r.email)}?subject=${encodeURIComponent('Re: ' + (r.subject || 'Inquiry'))}" class="btn" style="padding:6px 14px; font-size:13px; text-decoration:none;">Reply via Email</a>
+            <form method="POST" action="/admin/contact-messages/${r.id}/delete" onsubmit="return confirm('Delete this message?');" style="display:inline;">
+              <button type="submit" class="btn" style="padding:6px 14px; font-size:13px; background:#fee2e2; color:#b91c1c; border:none; border-radius:6px; cursor:pointer;">Delete</button>
+            </form>
+          </div>
+        </div>
+      `).join('') : '<div class="card" style="padding:32px; text-align:center; color:var(--text-muted);">No messages received yet.</div>';
+
+      res.send(layout({
+        title: 'Contact Messages', authed: true,
+        body: `
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;">
+            <div>
+              <h1 style="font-size:32px; font-weight:800; letter-spacing:-0.03em; margin:0 0 4px;">Contact Messages</h1>
+              <p class="muted" style="margin:0;">Inquiries submitted through the portfolio contact form.</p>
+            </div>
+            <a href="/admin" class="btn secondary" style="font-size:13px;">&larr; Back to Dashboard</a>
+          </div>
+          ${listHtml}
+        `,
+      }));
+    } catch (err) { next(err); }
+  });
+
+  app.post('/admin/contact-messages/:id/delete', async (req, res, next) => {
+    try {
+      const sql = getSql();
+      await sql(`DELETE FROM contact_messages WHERE id = $1`, [req.params.id]);
+      res.redirect('/admin/contact-messages');
+    } catch (err) { next(err); }
+  });
+
   // ─────────────────────────────────────────────────────────────────────
   app.use((req, res) => res.status(404).json({ detail: 'Not found.' }));
 
@@ -1285,6 +1374,7 @@ const SETTINGS_FIELDS = [
   { key: 'social_researchgate', label: 'ResearchGate URL', type: 'text', group: 'Social Links' },
   { key: 'social_scholar', label: 'Google Scholar URL', type: 'text', group: 'Social Links' },
   { key: 'social_orcid', label: 'ORCID URL', type: 'text', group: 'Social Links' },
+  { key: 'social_x', label: 'X (Twitter) URL', type: 'text', group: 'Social Links' },
   { key: 'skills_languages', label: 'Skills: Languages (comma separated)', type: 'text', group: 'Skills' },
   { key: 'skills_frameworks', label: 'Skills: Frameworks (comma separated)', type: 'text', group: 'Skills' },
   { key: 'skills_tools', label: 'Skills: Tools (comma separated)', type: 'text', group: 'Skills' },

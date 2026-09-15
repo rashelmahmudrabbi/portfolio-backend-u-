@@ -27,6 +27,7 @@ CREATE TABLE IF NOT EXISTS site_settings (
   social_researchgate TEXT DEFAULT '',
   social_scholar TEXT DEFAULT '',
   social_orcid TEXT DEFAULT '',
+  social_x TEXT DEFAULT '',
   skills_languages TEXT DEFAULT '',
   skills_frameworks TEXT DEFAULT '',
   skills_tools TEXT DEFAULT '',
@@ -245,3 +246,14 @@ END $$;
 
 -- Add missing column if it doesn't exist (Postgres 11+)
 ALTER TABLE site_settings ADD COLUMN IF NOT EXISTS research_statement_text TEXT DEFAULT '';
+ALTER TABLE site_settings ADD COLUMN IF NOT EXISTS social_x TEXT DEFAULT '';
+
+CREATE TABLE IF NOT EXISTS contact_messages (
+  id SERIAL PRIMARY KEY,
+  name TEXT NOT NULL,
+  email TEXT NOT NULL,
+  subject TEXT DEFAULT '',
+  message TEXT NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  read BOOLEAN DEFAULT FALSE
+);
