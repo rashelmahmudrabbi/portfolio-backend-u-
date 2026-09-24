@@ -301,20 +301,43 @@ const STYLE = `
   a.link:hover { text-decoration: underline; color: var(--primary-hover); }
   
   /* Grid Links (Dashboard) */
-  .grid-links { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 18px; }
+  .grid-links { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
   .grid-links a { 
+    position: relative;
     display: flex; flex-direction: column; justify-content: center;
-    background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius);
-    padding: 20px 22px; text-decoration: none; color: var(--text-main); font-weight: 600; font-size: 15px;
-    transition: all 0.25s ease;
-    box-shadow: var(--shadow);
+    background: var(--card-bg); border: 1px solid var(--border); border-radius: 16px;
+    padding: 24px; text-decoration: none; color: var(--text-main); font-weight: 600; font-size: 16px;
+    transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+    overflow: hidden;
   }
+  
+  .grid-links a::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 100%);
+    z-index: 1; pointer-events: none;
+    transition: opacity 0.4s ease;
+    opacity: 0;
+  }
+  
   .grid-links a:hover { 
-    border-color: var(--primary); 
-    box-shadow: 0 10px 28px rgba(47,111,237,0.12); 
-    transform: translateY(-3px);
+    border-color: rgba(47, 111, 237, 0.4); 
+    box-shadow: 0 16px 40px rgba(47,111,237,0.12), 0 0 0 1px rgba(47, 111, 237, 0.1); 
+    transform: translateY(-4px) scale(1.01);
   }
-  .grid-links a span { display: block; font-weight: 400; color: var(--text-muted); font-size: 13px; margin-top: 6px; }
+  
+  .grid-links a:hover::before {
+    opacity: 1;
+  }
+  
+  .grid-links a > div, .grid-links a > span {
+    position: relative;
+    z-index: 2;
+  }
+  
+  .grid-links a span { display: block; font-weight: 400; color: var(--text-muted); font-size: 14px; margin-top: 8px; line-height: 1.4; }
   
   /* Forms */
   label { display: block; font-weight: 600; font-size: 13.5px; margin: 18px 0 6px; color: var(--text-main); }
