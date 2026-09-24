@@ -541,10 +541,14 @@ function buildApp() {
       // Seed admin_users table if empty
       const adminCount = await sql`SELECT count(*) FROM admin_users`;
       if (!adminCount || Number(adminCount[0]?.count) === 0) {
-        const expectedUser = process.env.ADMIN_USERNAME || 'admin';
-        const expectedPass = process.env.ADMIN_PASSWORD || 'password';
-        const hash = auth.hashPassword(expectedPass);
-        await sql`INSERT INTO admin_users (id, username, password_hash) VALUES (1, ${expectedUser}, ${hash}) ON CONFLICT DO NOTHING`;
+        const expectedUser = process.env.ADMIN_USERNAME;
+        const expectedPass = process.env.ADMIN_PASSWORD;
+        if (expectedUser && expectedPass) {
+          const hash = auth.hashPassword(expectedPass);
+          await sql`INSERT INTO admin_users (id, username, password_hash) VALUES (1, ${expectedUser}, ${hash}) ON CONFLICT DO NOTHING`;
+        } else {
+          console.warn('ADMIN SEED: ADMIN_USERNAME or ADMIN_PASSWORD env vars not set. Skipping admin user creation.');
+        }
       }
 
       if (await auth.checkCredentials(sql, username, password)) {

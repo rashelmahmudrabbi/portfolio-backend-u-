@@ -54,10 +54,14 @@ async function checkCredentials(sql, username, password) {
     console.error('Credentials check DB error:', e);
   }
   
-  // Fallback to environment variables
-  const expectedUser = process.env.ADMIN_USERNAME || 'admin';
-  const expectedPass = process.env.ADMIN_PASSWORD || 'password';
-  if (username === expectedUser && password === expectedPass) {
+  // Fallback to environment variables (only if both are explicitly set)
+  const expectedUser = process.env.ADMIN_USERNAME;
+  const expectedPass = process.env.ADMIN_PASSWORD;
+  if (!expectedUser || !expectedPass) {
+    console.warn('AUTH: ADMIN_USERNAME or ADMIN_PASSWORD env vars are not set. Env-var fallback login disabled.');
+    return false;
+  }
+  if (safeStringEqual(username, expectedUser) && safeStringEqual(password, expectedPass)) {
     return true;
   }
   return false;
