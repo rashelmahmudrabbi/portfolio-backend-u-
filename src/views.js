@@ -511,6 +511,91 @@ const STYLE = `
     from { transform: translateY(-10px); opacity: 0; } 
     to { transform: translateY(0); opacity: 1; } 
   }
+  
+  /* LOGIN PAGE SPECIFIC */
+  .login-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    background: linear-gradient(135deg, var(--primary-tint) 0%, var(--bg) 100%);
+    width: 100vw;
+    margin-left: -16px;
+    margin-top: -64px;
+    padding: 20px;
+  }
+  [data-theme="dark"] .login-wrapper {
+    background: linear-gradient(135deg, rgba(47, 111, 237, 0.1) 0%, var(--bg) 100%);
+  }
+  .login-card {
+    width: 100%;
+    max-width: 400px;
+    padding: 40px;
+    background: var(--card-bg);
+    border-radius: var(--radius);
+    box-shadow: 0 16px 40px rgba(0,0,0,0.08);
+    border: 1px solid var(--border);
+    animation: slideUpFade 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .login-header {
+    text-align: center;
+    margin-bottom: 32px;
+  }
+  .login-logo {
+    width: 56px;
+    height: 56px;
+    background: var(--primary-tint);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 16px;
+    font-size: 24px;
+    color: var(--primary);
+  }
+  .login-header h1 {
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+  .form-group-floating {
+    position: relative;
+    margin-bottom: 20px;
+  }
+  .form-group-floating .input-icon {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+    font-size: 18px;
+    pointer-events: none;
+    transition: color 0.2s ease;
+  }
+  .form-group-floating input {
+    width: 100%;
+    padding: 14px 14px 14px 42px;
+    border: 2px solid var(--border);
+    border-radius: 8px;
+    background: var(--surface-2);
+    color: var(--text-main);
+    font-size: 15px;
+    transition: all 0.2s ease;
+    outline: none;
+  }
+  .form-group-floating input:focus {
+    border-color: var(--primary);
+    background: var(--card-bg);
+    box-shadow: 0 0 0 3px var(--primary-tint);
+  }
+  .form-group-floating input:focus + .input-icon,
+  .form-group-floating input:not(:placeholder-shown) + .input-icon {
+    color: var(--primary);
+  }
+  .btn-block { width: 100%; justify-content: center; padding: 14px; font-size: 16px; margin-top: 8px; }
+  .btn-lg { font-size: 16px; padding: 12px 24px; }
+  .btn i { margin-left: 8px; transition: transform 0.2s ease; }
+  .btn:hover i { transform: translateX(4px); }
 `;
 
 function layout({ title, authed, body, flash }) {

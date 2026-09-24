@@ -510,16 +510,29 @@ function buildApp() {
     if (auth.isAuthenticated(req)) return res.redirect('/admin');
     res.send(layout({
       title: 'Log in', authed: false,
-      body: `<div class="card" style="max-width:360px; margin: 60px auto;">
-        <h1>Portfolio Admin</h1>
-        <p class="muted">Log in to edit your content.</p>
-        <form method="post" action="/admin/login">
-          <label for="username">Username</label>
-          <input type="text" name="username" id="username" autocomplete="username" />
-          <label for="password">Password</label>
-          <input type="password" name="password" id="password" autocomplete="current-password" />
-          <div class="actions"><button class="btn" type="submit">Log in</button></div>
-        </form>
+      body: `<div class="login-wrapper">
+        <div class="login-card">
+          <div class="login-header">
+            <div class="login-logo">
+              <i class="bi bi-shield-lock-fill"></i>
+            </div>
+            <h1>Welcome Back</h1>
+            <p class="muted">Sign in to Portfolio Admin</p>
+          </div>
+          <form method="post" action="/admin/login" class="login-form">
+            <div class="form-group-floating">
+              <input type="text" name="username" id="username" placeholder="Username" autocomplete="username" required />
+              <i class="bi bi-person input-icon"></i>
+            </div>
+            <div class="form-group-floating">
+              <input type="password" name="password" id="password" placeholder="Password" autocomplete="current-password" required />
+              <i class="bi bi-key input-icon"></i>
+            </div>
+            <button class="btn btn-block btn-lg" type="submit" style="background:var(--primary); color:#fff; border:none; display:flex; align-items:center;">
+              <span>Log in</span> <i class="bi bi-arrow-right"></i>
+            </button>
+          </form>
+        </div>
       </div>`,
       flash: req.query.error ? 'Invalid username or password.' : null,
     }));
